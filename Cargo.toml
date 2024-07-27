@@ -1,0 +1,7 @@
+[package]
+name = "mame_data_manager"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+dialoguer = "0.9"
