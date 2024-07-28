@@ -22,9 +22,12 @@ const PATHS: Paths = Paths {
 };
 
 fn main() -> Result<(), Box<dyn Error>> {
-
     check_folder_structure()?;
+    show_menu()?;
+    Ok(())
+}
 
+fn show_menu() -> Result<(), Box<dyn Error>> {
     loop {
         println!("/ Mame Data Manager");
         println!("===================");
@@ -68,6 +71,7 @@ fn download_files() -> Result<(), Box<dyn Error>> {
     for data_type in DATA_TYPES.iter() {
         
         if let Ok(source_url) = get_data_source(data_type.source, data_type.source_match) {
+            
             let file_name = get_file_name(&source_url);
             let file_path = format!("{}{}", PATHS.download_path, file_name);
 
