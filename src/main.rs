@@ -1,15 +1,21 @@
 mod data_types;
 mod helpers;
+mod readers;
+mod models;
 
-use data_types::{DATA_TYPES};
+use lazy_static::lazy_static;
+use models::Machine;
+use data_types::DATA_TYPES;
 use helpers::file_download_helper::download_file;
 use helpers::file_extractor_helper::extract_file;
 use helpers::data_source_helper::get_data_source;
+use readers::mame_reader::read_mame_file;
 use dialoguer::{theme::ColorfulTheme, Select}; 
 use std::fs;
 use std::error::Error;
 use std::collections::HashMap;
-use std::path::{Path, PathBuf};
+use std::path::{Path};
+use std::sync::Mutex;
 
 struct Paths {
     data_path: &'static str,
@@ -23,37 +29,30 @@ const PATHS: Paths = Paths {
     extracted_path: "data/extracted/",
 };
 
-static mut URL_MAP: Option<HashMap<String, String>> = None;
+lazy_static! {
+    static ref URL_MAP: Mutex<HashMap<String, String>> = Mutex::new(HashMap::new());
+    static ref MACHINES: Mutex<HashMap<String, Machine>> = Mutex::new(HashMap::new());
+}
 
 fn main() -> Result<(), Box<dyn Error>> {
-    initialize_url_map();
+    clear_console();
     check_folder_structure()?;
     show_menu()?;
     Ok(())
 }
 
-fn initialize_url_map() {
-    unsafe {
-        URL_MAP = Some(HashMap::new());
-    }
+fn clear_console() {
+    print!("\x1B[2J\x1B[1;1H");
 }
 
 fn get_url_from_map(name: &str) -> Option<String> {
-    unsafe {
-        if let Some(ref map) = URL_MAP {
-            map.get(name).cloned()
-        } else {
-            None
-        }
-    }
+    let map = URL_MAP.lock().unwrap();
+    map.get(name).cloned()
 }
 
 fn set_url_in_map(name: &str, url: &str) {
-    unsafe {
-        if let Some(ref mut map) = URL_MAP {
-            map.insert(name.to_string(), url.to_string());
-        }
-    }
+    let mut map = URL_MAP.lock().unwrap();
+    map.insert(name.to_string(), url.to_string());
 }
 
 fn show_menu() -> Result<(), Box<dyn Error>> {
@@ -130,11 +129,11 @@ fn download_files() -> Result<(), Box<dyn Error>> {
 fn extract_files() -> Result<(), Box<dyn Error>> {
     for data_type in DATA_TYPES.iter() {
 
-        let extracted_folder = format!("{}/{}", PATHS.extracted_path, data_type.name.to_lowercase());
+        let extracted_folder = format!("{}{}", PATHS.extracted_path, data_type.name.to_lowercase());
 
         // Check if the file already exists in the extracted folder
         if let Some(existing_file_path) = find_file_with_pattern(&extracted_folder, &data_type.file_name_pattern) {
-            println!("File {} already exists, skipping extraction.", existing_file_path.display());
+            println!("File {} already exists, skipping extraction.", existing_file_path);
             continue;
         }
 
@@ -168,18 +167,36 @@ fn extract_files() -> Result<(), Box<dyn Error>> {
 }
 
 fn read_files() -> Result<(), Box<dyn Error>> {
+    let data_type = &DATA_TYPES[0];
+    let extracted_folder = format!("{}{}", PATHS.extracted_path, data_type.name.to_lowercase());
     
-    println!("Read files option selected.");
+    if let Some(data_file_path) = find_file_with_pattern(&extracted_folder, &data_type.file_name_pattern) {
+        {
+            let mut machines_guard = MACHINES.lock().unwrap();
+            read_mame_file(&data_file_path, &mut machines_guard);
+        }
+
+        let machines_guard = MACHINES.lock().unwrap();
+        if let Some((name, machine)) = machines_guard.iter().next() {
+            println!("First machine found: Name: {}, Data: {:?}", name, machine);
+        } else {
+            println!("No machines found");
+        }
+    } else {
+        println!("No file found with the given pattern.");
+    }
+
     Ok(())
 }
 
-fn find_file_with_pattern(folder: &str, pattern: &regex::Regex) -> Option<PathBuf> {
+fn find_file_with_pattern(folder: &str, pattern: &regex::Regex) -> Option<String> {
     for entry in walkdir::WalkDir::new(folder).into_iter().filter_map(|e| e.ok()) {
         let path = entry.path();
         if path.is_file() {
             if let Some(file_name) = path.file_name().and_then(|name| name.to_str()) {
                 if pattern.is_match(file_name) {
-                    return Some(path.to_path_buf());
+                    // return Some(path.to_path_buf());
+                    return Some(path.to_string_lossy().into_owned());
                 }
             }
         }
