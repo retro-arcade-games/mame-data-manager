@@ -2,6 +2,7 @@ use crate::models::{Machine, BiosSet, Rom, DeviceRef, Software, Sample, Disk};
 use indicatif::{ProgressBar, ProgressStyle};
 use roxmltree::Document;
 use std::collections::HashMap;
+use std::error::Error;
 use std::fs;
 use quick_xml::events::Event;
 use quick_xml::Reader;
@@ -54,27 +55,29 @@ use quick_xml::Reader;
  *       - `region`: Optional region attribute (attribute).
  */
 
-
 /**
  * Read the contents of the given MAME XML file and populate the given HashMap with the machines.
  */
-pub fn read_mame_file(file_path: &str, machines: &mut HashMap<String, Machine>) {
-    let file_content = fs::read_to_string(file_path).expect("Unable to read file");
+pub fn read_mame_file(file_path: &str, machines: &mut HashMap<String, Machine>) -> Result<(), Box<dyn std::error::Error>> {
+    // Read the file content
+    let file_content = fs::read_to_string(file_path)?;
 
     // Count the number of machines in the file
-    let total_machines = count_machines(&file_content);
+    let total_machines = count_total_elements(&file_content)?;
     let pb = ProgressBar::new(total_machines as u64);
 
     pb.set_style(
         ProgressStyle::default_bar()
             .template(
-                "{spinner:.green} [{elapsed_precise}] [{bar:40.cyan/blue}] {pos}/{len} machines ({eta})",
+                "{spinner:.green} [{elapsed_precise}] [{bar:40.cyan/blue}] {pos}/{len} machines in mame.dat ({eta})",
             )
             .progress_chars("#>-"),
     );
 
-    let doc = Document::parse(&file_content).expect("Failed to parse XML");
+    // Parse XML document
+    let doc = Document::parse(&file_content).map_err(|e| Box::new(e) as Box<dyn std::error::Error>)?;
 
+    // Process each node in the XML document
     for node in doc.descendants() {
         if node.tag_name().name() == "machine" {
             let machine = parse_machine_element(&node);
@@ -84,12 +87,14 @@ pub fn read_mame_file(file_path: &str, machines: &mut HashMap<String, Machine>) 
     }
 
     pb.finish_with_message("Processing complete");
+
+    Ok(())
 }
 
 /**
  * Count the number of machines in the given MAME XML file content.
  */
-fn count_machines(file_content: &str) -> usize {
+pub fn count_total_elements(file_content: &str) -> Result<usize, Box<dyn Error>> {
     let mut reader = Reader::from_str(file_content);
     reader.trim_text(true);
     let mut buf = Vec::with_capacity(8 * 1024);
@@ -102,15 +107,15 @@ fn count_machines(file_content: &str) -> usize {
             }
             Ok(Event::Eof) => break,
             Err(e) => {
-                eprintln!("Error: {:?}", e);
-                break;
+                // Return the error instead of printing it
+                return Err(Box::new(e));
             }
             _ => {}
         }
         buf.clear();
     }
 
-    count
+    Ok(count)
 }
 
 /**

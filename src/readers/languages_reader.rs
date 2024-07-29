@@ -1,6 +1,7 @@
 use crate::models::Machine;
 use indicatif::{ProgressBar, ProgressStyle};
 use std::collections::HashMap;
+use std::error::Error;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 
@@ -25,39 +26,45 @@ use std::io::{BufRead, BufReader};
 /**
  * Read the contents of the given languages file and populate the given HashMap with the languages.
  */
-pub fn read_languages_file(file_path: &str, machines: &mut HashMap<String, Machine>) {
-    let total_elements = count_total_elements(file_path).expect("Failed to count total elements");
+pub fn read_languages_file(file_path: &str, machines: &mut HashMap<String, Machine>) -> Result<(), Box<dyn Error>> {
+    // Count the total number of elements for the progress bar
+    let total_elements = count_total_elements(file_path)?;
     let pb = ProgressBar::new(total_elements as u64);
     pb.set_style(
         ProgressStyle::default_bar()
-            .template("{spinner:.green} [{elapsed_precise}] [{bar:40.cyan/blue}] {pos}/{len} lines ({eta})")
+            .template("{spinner:.green} [{elapsed_precise}] [{bar:40.cyan/blue}] {pos}/{len} roms in languages.ini ({eta})")
             .progress_chars("#>-"),
     );
 
-    let file = File::open(file_path).expect("Failed to open file");
+    // Open the file and create a buffered reader
+    let file = File::open(file_path)?;
     let reader = BufReader::new(file);
     let mut current_language: Option<String> = None;
 
+    // Define lines to ignore
     let to_ignore = vec![";", "", " ", "", "[FOLDER_SETTINGS]", "[ROOT_FOLDER]"];
 
+    // Process each line of the file
     for line in reader.lines() {
-        let line = line.expect("Failed to read line");
+        let line = line?;
         let first_char = line.chars().next().unwrap_or(' ');
 
         if !to_ignore.contains(&first_char.to_string().as_str()) && !to_ignore.contains(&line.as_str()) {
             if first_char == '[' {
+                // Set the current language when a new language section starts
                 current_language = Some(line.replace("[", "").replace("]", ""));
             } else if let Some(language) = &current_language {
+                // Update the machine's languages if the line matches a machine name
                 if let Some(machine) = machines.get_mut(&line) {
                     machine.languages.push(language.clone());
+                    pb.inc(1);
                 }
             }
         }
-
-        pb.inc(1);
     }
 
     pb.finish_with_message("Processing complete");
+    Ok(())
 }
 
 /**

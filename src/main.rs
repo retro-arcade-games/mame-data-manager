@@ -197,18 +197,18 @@ fn read_files() -> Result<(), Box<dyn Error>> {
         if let Some(data_file_path) = find_file_with_pattern(&extracted_folder, &data_type.file_name_pattern) {
             {
                 let mut machines_guard = MACHINES.lock().unwrap();
-                (data_type.read_function)(&data_file_path, &mut machines_guard);
+                let _ = (data_type.read_function)(&data_file_path, &mut machines_guard);
             }
         } else {
             println!("No file found with the given pattern for data type: {}", data_type.name);
         }
     }
     let machines_guard = MACHINES.lock().unwrap();
-    if let Some(machine) = machines_guard.get("zombrvno") {
+    if let Some(machine) = machines_guard.get("mk") {
         let json_data = to_string_pretty(&machine).expect("Failed to serialize machine to JSON");
-        println!("Machine found: Name: zombrvno, Data: {}", json_data);
+        println!("Machine found: Name: mk, Data: {}", json_data);
     } else {
-        println!("Machine with name 'zombrvno' not found");
+        println!("Machine with name 'mk' not found");
     }
 
     Ok(())
