@@ -9,13 +9,13 @@ use data_types::DATA_TYPES;
 use helpers::file_download_helper::download_file;
 use helpers::file_extractor_helper::extract_file;
 use helpers::data_source_helper::get_data_source;
-use readers::mame_reader::read_mame_file;
 use dialoguer::{theme::ColorfulTheme, Select}; 
 use std::fs;
 use std::error::Error;
 use std::collections::HashMap;
 use std::path::{Path};
 use std::sync::Mutex;
+use serde_json::to_string_pretty;
 
 struct Paths {
     data_path: &'static str,
@@ -41,20 +41,32 @@ fn main() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
+/**
+ * Clear the console screen.
+ */
 fn clear_console() {
     print!("\x1B[2J\x1B[1;1H");
 }
 
+/**
+ * Get the URL from the URL map.
+ */
 fn get_url_from_map(name: &str) -> Option<String> {
     let map = URL_MAP.lock().unwrap();
     map.get(name).cloned()
 }
 
+/**
+ * Set the URL in the URL map.
+ */
 fn set_url_in_map(name: &str, url: &str) {
     let mut map = URL_MAP.lock().unwrap();
     map.insert(name.to_string(), url.to_string());
 }
 
+/**
+ * Show the main menu.
+ */
 fn show_menu() -> Result<(), Box<dyn Error>> {
     loop {
         println!("/ Mame Data Manager");
@@ -83,6 +95,9 @@ fn show_menu() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
+/**
+ * Check if the required folder structure exists and create it if it doesn't.
+ */
 fn check_folder_structure() -> Result<(), Box<dyn Error>> {
     let paths = [PATHS.data_path, PATHS.download_path, PATHS.extracted_path];
 
@@ -102,6 +117,9 @@ fn check_folder_structure() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
+/**
+ * Download the files from the data sources.
+ */
 fn download_files() -> Result<(), Box<dyn Error>> {
     for data_type in DATA_TYPES.iter() {
         
@@ -126,6 +144,9 @@ fn download_files() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
+/**
+ * Extract the downloaded files.
+ */
 fn extract_files() -> Result<(), Box<dyn Error>> {
     for data_type in DATA_TYPES.iter() {
 
@@ -166,29 +187,36 @@ fn extract_files() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
+/**
+ * Read the extracted files.
+ */
 fn read_files() -> Result<(), Box<dyn Error>> {
-    let data_type = &DATA_TYPES[0];
-    let extracted_folder = format!("{}{}", PATHS.extracted_path, data_type.name.to_lowercase());
-    
-    if let Some(data_file_path) = find_file_with_pattern(&extracted_folder, &data_type.file_name_pattern) {
-        {
-            let mut machines_guard = MACHINES.lock().unwrap();
-            read_mame_file(&data_file_path, &mut machines_guard);
-        }
+    for data_type in DATA_TYPES.iter() {
+        let extracted_folder = format!("{}{}", PATHS.extracted_path, data_type.name.to_lowercase());
 
-        let machines_guard = MACHINES.lock().unwrap();
-        if let Some((name, machine)) = machines_guard.iter().next() {
-            println!("First machine found: Name: {}, Data: {:?}", name, machine);
+        if let Some(data_file_path) = find_file_with_pattern(&extracted_folder, &data_type.file_name_pattern) {
+            {
+                let mut machines_guard = MACHINES.lock().unwrap();
+                (data_type.read_function)(&data_file_path, &mut machines_guard);
+            }
         } else {
-            println!("No machines found");
+            println!("No file found with the given pattern for data type: {}", data_type.name);
         }
+    }
+    let machines_guard = MACHINES.lock().unwrap();
+    if let Some(machine) = machines_guard.get("zombrvno") {
+        let json_data = to_string_pretty(&machine).expect("Failed to serialize machine to JSON");
+        println!("Machine found: Name: zombrvno, Data: {}", json_data);
     } else {
-        println!("No file found with the given pattern.");
+        println!("Machine with name 'zombrvno' not found");
     }
 
     Ok(())
 }
 
+/**
+ * Find a file with the given pattern in the given folder.
+ */
 fn find_file_with_pattern(folder: &str, pattern: &regex::Regex) -> Option<String> {
     for entry in walkdir::WalkDir::new(folder).into_iter().filter_map(|e| e.ok()) {
         let path = entry.path();
@@ -204,6 +232,9 @@ fn find_file_with_pattern(folder: &str, pattern: &regex::Regex) -> Option<String
     None
 }
 
+/**
+ * Get the file name from the given URL.
+ */
 fn get_file_name(url: &str) -> String {
     let last_param = url.split('/').last().unwrap_or("");
     let file_name = last_param.split('=').last().unwrap_or("");

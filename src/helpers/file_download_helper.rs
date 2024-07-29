@@ -4,6 +4,9 @@ use std::error::Error;
 use std::fs::File;
 use std::io::{Read, Write};
 
+/**
+ * Download a file from the given URL and save it to the given file path.
+ */
 pub fn download_file(url: &str, file_path: &str) -> Result<(), Box<dyn Error>> {
     let response = Client::new().get(url).send()?;
     let total_size = response.content_length();

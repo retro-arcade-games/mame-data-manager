@@ -5,6 +5,9 @@ use std::path::Path;
 use zip::read::ZipArchive;
 use sevenz_rust::decompress_file;
 
+/**
+ * Extract the contents of the given archive file to the given destination folder.
+ */
 pub fn extract_file(archive_path: &str, destination_folder: &str) -> Result<(), Box<dyn Error>> {
     if archive_path.ends_with(".zip") {
         extract_zip(archive_path, destination_folder)?;
@@ -16,6 +19,9 @@ pub fn extract_file(archive_path: &str, destination_folder: &str) -> Result<(), 
     Ok(())
 }
 
+/**
+ * Extract the contents of a ZIP archive to the given destination folder.
+ */
 fn extract_zip(archive_path: &str, destination_folder: &str) -> Result<(), Box<dyn Error>> {
     
     let file = File::open(archive_path)?;
@@ -53,6 +59,9 @@ fn extract_zip(archive_path: &str, destination_folder: &str) -> Result<(), Box<d
     Ok(())
 }
 
+/**
+ * Extract the contents of a 7zip archive to the given destination folder.
+ */
 fn extract_7zip(archive_path: &str, destination_folder: &str) -> Result<(), Box<dyn Error>> {
     
     let pb = ProgressBar::new_spinner();

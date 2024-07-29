@@ -9,7 +9,7 @@ pub struct Machine {
     pub is_bios: Option<bool>,
     pub is_device: Option<bool>,
     pub runnable: Option<bool>,
-    pub is_mechanical: bool,
+    pub is_mechanical: Option<bool>,
     pub sample_of: Option<String>,
     pub description: Option<String>,
     pub year: Option<String>,
@@ -20,13 +20,14 @@ pub struct Machine {
     pub software_list: Vec<Software>,
     pub samples: Vec<Sample>,
     pub driver_status: Option<String>,
-    pub languages: Vec<Language>,
+    pub languages: Vec<String>,
     pub players: Option<String>,
     pub series: Option<String>,
     pub genre: Option<String>,
     pub subgenre: Option<String>,
     pub is_mature: Option<bool>,
     pub history_sections: Vec<HistorySection>,
+    pub disks: Vec<Disk>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -60,9 +61,14 @@ pub struct Sample {
     pub name: String,
 }
 
+
 #[derive(Debug, Serialize, Deserialize)]
-pub struct Language {
+pub struct Disk {
     pub name: String,
+    pub sha1: Option<String>,
+    pub merge: Option<String>,
+    pub status: Option<String>,
+    pub region: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
