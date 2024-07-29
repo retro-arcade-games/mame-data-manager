@@ -13,7 +13,7 @@ use dialoguer::{theme::ColorfulTheme, Select};
 use std::fs;
 use std::error::Error;
 use std::collections::HashMap;
-use std::path::{Path};
+use std::path::Path;
 use std::sync::Mutex;
 use serde_json::to_string_pretty;
 

@@ -1,4 +1,4 @@
-use crate::models::{Machine};
+use crate::models::Machine;
 use std::{collections::HashMap, error::Error};
 
 pub fn read_nplayers_file(file_path: &str, machines: &mut HashMap<String, Machine>) -> Result<(), Box<dyn Error>>{
