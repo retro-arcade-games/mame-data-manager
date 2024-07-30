@@ -55,6 +55,7 @@ use quick_xml::Reader;
  *       - `region`: Optional region attribute (attribute).
  */
 
+
 /**
  * Read the contents of the given MAME XML file and populate the given HashMap with the machines.
  */

@@ -71,9 +71,9 @@ pub struct Disk {
     pub region: Option<String>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct HistorySection {
     pub name: String,
     pub text: String,
-    pub order: u32,
+    pub order: usize,
 }

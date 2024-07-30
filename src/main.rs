@@ -204,11 +204,11 @@ fn read_files() -> Result<(), Box<dyn Error>> {
         }
     }
     let machines_guard = MACHINES.lock().unwrap();
-    if let Some(machine) = machines_guard.get("gumbo") {
+    if let Some(machine) = machines_guard.get("mk") {
         let json_data = to_string_pretty(&machine).expect("Failed to serialize machine to JSON");
-        println!("Machine found: Name: gumbo, Data: {}", json_data);
+        println!("Machine found: Name: mk, Data: {}", json_data);
     } else {
-        println!("Machine with name 'gumbo' not found");
+        println!("Machine with name 'mk' not found");
     }
 
     Ok(())
