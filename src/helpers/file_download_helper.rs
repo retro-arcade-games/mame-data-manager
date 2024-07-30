@@ -43,9 +43,7 @@ pub fn download_file(url: &str, file_path: &str) -> Result<(), Box<dyn Error>> {
     }
 
     if let Some(pb) = pb {
-        pb.finish_with_message("Download complete");
-    } else {
-        println!("Download complete");
+        pb.finish_and_clear();
     }
 
     Ok(())

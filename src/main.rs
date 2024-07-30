@@ -10,12 +10,13 @@ use helpers::file_download_helper::download_file;
 use helpers::file_extractor_helper::extract_file;
 use helpers::data_source_helper::get_data_source;
 use dialoguer::{theme::ColorfulTheme, Select}; 
-use std::fs;
+use std::{fs, io};
 use std::error::Error;
 use std::collections::HashMap;
 use std::path::Path;
 use std::sync::Mutex;
 use serde_json::to_string_pretty;
+use console::{style, Emoji, Term};
 
 struct Paths {
     data_path: &'static str,
@@ -29,9 +30,15 @@ const PATHS: Paths = Paths {
     extracted_path: "data/extracted/",
 };
 
+static DOWNLOAD: Emoji<'_, '_> = Emoji("🌐 ", "");
+static INFO: Emoji<'_, '_> = Emoji("ℹ️  ", "");
+static ERROR: Emoji<'_, '_> = Emoji("🚨 ", ":-)");
+static SUCCESS: Emoji<'_, '_> = Emoji("✅ ", ":-)");
+
 lazy_static! {
     static ref URL_MAP: Mutex<HashMap<String, String>> = Mutex::new(HashMap::new());
     static ref MACHINES: Mutex<HashMap<String, Machine>> = Mutex::new(HashMap::new());
+    static ref TERM: Term = Term::stdout();
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
@@ -117,12 +124,30 @@ fn check_folder_structure() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
+fn clean_last_line() -> Result<(), io::Error> {
+    TERM.move_cursor_up(1)?;
+    TERM.clear_line()?;
+    Ok(())
+}
+
 /**
  * Download the files from the data sources.
  */
 fn download_files() -> Result<(), Box<dyn Error>> {
+    let mut count = 0;
+
     for data_type in DATA_TYPES.iter() {
         
+        count += 1;
+        let step = format!("[{}/{}]", count, DATA_TYPES.len());
+
+        println!(
+            "{} {} Getting URL for {}...",
+            style(step.clone()).bold().dim(),
+            DOWNLOAD,
+            data_type.name
+        );
+
         if let Ok(source_url) = get_data_source(data_type.source, data_type.source_match) {
             
             set_url_in_map(data_type.name, &source_url);
@@ -130,14 +155,47 @@ fn download_files() -> Result<(), Box<dyn Error>> {
             let file_name = get_file_name(&source_url);
             let file_path = format!("{}{}", PATHS.download_path, file_name);
 
+            clean_last_line()?;
+
             if !Path::new(&file_path).exists() {
-                println!("Downloading {} from {}", data_type.name, source_url);
+                
+                println!(
+                    "{} {} Downloading {}...",
+                    style(step.clone()).bold().dim(),
+                    DOWNLOAD,
+                    source_url
+                );
+                
                 download_file(&source_url, &file_path)?;
+                
+                clean_last_line()?;
+                
+                println!(
+                    "{} {} {} downloaded successfully",
+                    style(step.clone()).bold().dim(),
+                    SUCCESS,
+                    style(file_name).cyan()
+                );
+
             } else {
-                println!("File for {} already exists, skipping.", data_type.name);
+
+                println!(
+                    "{} {} {} already exists (skipped)",
+                    style(step).bold().dim(),
+                    INFO,
+                    style(file_name).cyan()
+                );
             }
         } else {
-            eprintln!("Error: failed to find a matching source for {}", data_type.name);
+
+            clean_last_line()?;
+
+            println!(
+                "{} {} Failed getting matching source for {}",
+                style(step).bold().dim(),
+                ERROR,
+                data_type.name
+            );
         }
     }
 
@@ -205,7 +263,7 @@ fn read_files() -> Result<(), Box<dyn Error>> {
     }
     let machines_guard = MACHINES.lock().unwrap();
     if let Some(machine) = machines_guard.get("mk") {
-        let json_data = to_string_pretty(&machine).expect("Failed to serialize machine to JSON");
+        let json_data = to_string_pretty(&machine.name).expect("Failed to serialize machine to JSON");
         println!("Machine found: Name: mk, Data: {}", json_data);
     } else {
         println!("Machine with name 'mk' not found");
