@@ -1,4 +1,4 @@
-use std::{collections::HashMap, error::Error};
+use std::collections::HashMap;
 use regex::Regex;
 use lazy_static::lazy_static;
 
@@ -12,7 +12,7 @@ pub struct DataType {
     pub source: &'static str,
     pub source_match: &'static str,
     pub file_name_pattern: Regex,
-    pub read_function: fn(&str, &mut HashMap<String, Machine>) -> Result<(), Box<dyn Error>>,
+    pub read_function: fn(&str, &mut HashMap<String, Machine>) -> Result<(), Box<dyn std::error::Error>>,
 }
 
 

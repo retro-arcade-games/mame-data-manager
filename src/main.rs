@@ -9,14 +9,15 @@ use data_types::DATA_TYPES;
 use helpers::file_download_helper::download_file;
 use helpers::file_extractor_helper::extract_file;
 use helpers::data_source_helper::get_data_source;
-use dialoguer::{theme::ColorfulTheme, Select}; 
-use std::{fs, io};
+use dialoguer::{theme::ColorfulTheme, Select};
+use std::fs;
 use std::error::Error;
 use std::collections::HashMap;
 use std::path::Path;
-use std::sync::Mutex;
+use std::sync::{Arc, Mutex};
 use serde_json::to_string_pretty;
-use console::{style, Emoji, Term};
+use console::style;
+use helpers::ui_helper::{icons::{*}, print_step_message, println_step_message, show_splash_screen, show_title};
 
 struct Paths {
     data_path: &'static str,
@@ -30,32 +31,15 @@ const PATHS: Paths = Paths {
     extracted_path: "data/extracted/",
 };
 
-static DOWNLOAD: Emoji<'_, '_> = Emoji("🌐 ", "");
-static INFO: Emoji<'_, '_> = Emoji("ℹ️  ", "");
-static ERROR: Emoji<'_, '_> = Emoji("🚨 ", "");
-static SUCCESS: Emoji<'_, '_> = Emoji("✅ ", "");
-static LOUPE: Emoji<'_, '_> = Emoji("🔍 ", "");
-static FOLDER: Emoji<'_, '_> = Emoji("🗂 ", "");
-static READ: Emoji<'_, '_> = Emoji("🧾 ", "");
-
 lazy_static! {
     static ref URL_MAP: Mutex<HashMap<String, String>> = Mutex::new(HashMap::new());
-    static ref MACHINES: Mutex<HashMap<String, Machine>> = Mutex::new(HashMap::new());
-    static ref TERM: Term = Term::stdout();
+    static ref MACHINES: Arc<Mutex<HashMap<String, Machine>>> = Arc::new(Mutex::new(HashMap::new()));
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
-    clear_console();
     check_folder_structure()?;
     show_menu()?;
     Ok(())
-}
-
-/**
- * Clear the console screen.
- */
-fn clear_console() {
-    print!("\x1B[2J\x1B[1;1H");
 }
 
 /**
@@ -78,9 +62,12 @@ fn set_url_in_map(name: &str, url: &str) {
  * Show the main menu.
  */
 fn show_menu() -> Result<(), Box<dyn Error>> {
+
+    show_splash_screen();
+
     loop {
-        println!("/ Mame Data Manager");
-        println!("===================");
+
+        show_title();
 
         let selections = &["Download files", "Extract files", "Read files", "Exit"];
         let selection = Select::with_theme(&ColorfulTheme::default())
@@ -127,12 +114,6 @@ fn check_folder_structure() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-fn clean_last_line() -> Result<(), io::Error> {
-    TERM.move_cursor_up(1)?;
-    TERM.clear_line()?;
-    Ok(())
-}
-
 /**
  * Download the files from the data sources.
  */
@@ -142,14 +123,9 @@ fn download_files() -> Result<(), Box<dyn Error>> {
     for data_type in DATA_TYPES.iter() {
         
         count += 1;
-        let step = format!("[{}/{}]", count, DATA_TYPES.len());
 
-        println!(
-            "{} {} Getting URL for {}...",
-            style(step.clone()).bold().dim(),
-            DOWNLOAD,
-            data_type.name
-        );
+        let message = format!("Getting URL for {}...", data_type.name);
+        println_step_message(&message, count, DATA_TYPES.len(), DOWNLOAD);
 
         if let Ok(source_url) = get_data_source(data_type.source, data_type.source_match) {
             
@@ -158,47 +134,28 @@ fn download_files() -> Result<(), Box<dyn Error>> {
             let file_name = get_file_name(&source_url);
             let file_path = format!("{}{}", PATHS.download_path, file_name);
 
-            clean_last_line()?;
-
             if !Path::new(&file_path).exists() {
                 
-                println!(
-                    "{} {} Downloading {}...",
-                    style(step.clone()).bold().dim(),
-                    DOWNLOAD,
-                    source_url
-                );
+                let message = format!("Downloading {}...", source_url);
+                print_step_message(&message, count, DATA_TYPES.len(), DOWNLOAD);
                 
                 download_file(&source_url, &file_path)?;
                 
-                clean_last_line()?;
-                
-                println!(
-                    "{} {} {} downloaded successfully",
-                    style(step.clone()).bold().dim(),
-                    SUCCESS,
-                    style(file_name).cyan()
-                );
+                let message = format!("{} downloaded successfully", style(file_name).cyan());
+                print_step_message(&message, count, DATA_TYPES.len(), SUCCESS);
 
             } else {
 
-                println!(
-                    "{} {} {} already exists (skipped)",
-                    style(step).bold().dim(),
-                    INFO,
-                    style(file_name).cyan()
-                );
+                let message = format!("{} already exists (skipped)", style(file_name).cyan());
+                print_step_message(&message, count, DATA_TYPES.len(), INFO);
+
             }
         } else {
 
-            clean_last_line()?;
+            
+            let message = format!("Failed getting matching source for {}", data_type.name);
+            print_step_message(&message, count, DATA_TYPES.len(), ERROR);
 
-            println!(
-                "{} {} Failed getting matching source for {}",
-                style(step).bold().dim(),
-                ERROR,
-                data_type.name
-            );
         }
     }
 
@@ -214,30 +171,19 @@ fn extract_files() -> Result<(), Box<dyn Error>> {
     for data_type in DATA_TYPES.iter() {
 
         count += 1;
-        let step = format!("[{}/{}]", count, DATA_TYPES.len());
 
         let extracted_folder = format!("{}{}", PATHS.extracted_path, data_type.name.to_lowercase());
 
-        println!(
-            "{} {} Checking if {} file already extracted...",
-            style(step.clone()).bold().dim(),
-            LOUPE,
-            data_type.name
-        );
+        let message = format!("Checking if {} file already extracted...", data_type.name);
+        println_step_message(&message, count, DATA_TYPES.len(), LOUPE);
 
         // Check if the file already exists in the extracted folder
         if let Some(existing_file_path) = find_file_with_pattern(&extracted_folder, &data_type.file_name_pattern) {
             
             let data_file = existing_file_path.split('/').last().unwrap();
 
-            clean_last_line()?;
-            
-            println!(
-                "{} {} {} already exists (skipped)",
-                style(step.clone()).bold().dim(),
-                INFO,
-                style(data_file).cyan(), 
-            );
+            let message = format!("{} already exists (skipped)", style(data_file).cyan());
+            print_step_message(&message, count, DATA_TYPES.len(), INFO);
             
             continue;
         }
@@ -251,14 +197,8 @@ fn extract_files() -> Result<(), Box<dyn Error>> {
             },
             None => {
 
-                clean_last_line()?;
-
-                println!(
-                    "{} {} URL for {} not found",
-                    style(step).bold().dim(),
-                    ERROR,
-                    data_type.name
-                );
+                let message = format!("URL for {} not found", data_type.name);
+                print_step_message(&message, count, DATA_TYPES.len(), ERROR);
 
                 continue;
             }
@@ -270,37 +210,18 @@ fn extract_files() -> Result<(), Box<dyn Error>> {
         // Check if the file exists
         if Path::new(&file_path).exists() {
 
-            clean_last_line()?;
-
-            println!(
-                "{} {} Extracting file {} to {}",
-                style(step.clone()).bold().dim(),
-                FOLDER,
-                file_path, 
-                extracted_folder
-            );
+            let message = format!("Extracting {} to {}", file_path, extracted_folder);
+            print_step_message(&message, count, DATA_TYPES.len(), FOLDER);
 
             extract_file(&file_path, &extracted_folder)?;
 
-            clean_last_line()?;
-
-            println!(
-                "{} {} {} extracted successfully",
-                style(step).bold().dim(),
-                SUCCESS,
-                style(file_name).cyan(), 
-            );
+            let message = format!("{} extracted successfully", style(file_name).cyan());
+            print_step_message(&message, count, DATA_TYPES.len(), SUCCESS);
 
         } else {
 
-            clean_last_line()?;
-
-            println!(
-                "{} {} File for {} not found",
-                style(step).bold().dim(),
-                ERROR,
-                file_name
-            );
+            let message = format!("File for {} not found", data_type.name);
+            print_step_message(&message, count, DATA_TYPES.len(), ERROR);
 
         }
         
@@ -317,52 +238,32 @@ fn read_files() -> Result<(), Box<dyn Error>> {
     for data_type in DATA_TYPES.iter() {
 
         count += 1;
-        let step = format!("[{}/{}]", count, DATA_TYPES.len());
 
         let extracted_folder = format!("{}{}", PATHS.extracted_path, data_type.name.to_lowercase());
 
-        println!(
-            "{} {} Checking if {} file exists...",
-            style(step.clone()).bold().dim(),
-            LOUPE,
-            data_type.name
-        );
+        let message = format!("Checking if {} file exists...", data_type.name);
+        println_step_message(&message, count, DATA_TYPES.len(), LOUPE);
 
         if let Some(data_file_path) = find_file_with_pattern(&extracted_folder, &data_type.file_name_pattern) {
             {
 
                 let data_file = data_file_path.split('/').last().unwrap();
 
-                clean_last_line()?;
+                let message = format!("Reading {}...", style(data_file).cyan());
+                print_step_message(&message, count, DATA_TYPES.len(), READ);
 
-                println!(
-                    "{} {} Reading {}",
-                    style(step.clone()).bold().dim(),
-                    READ,
-                    style(data_file).cyan(), 
-                );
                 let mut machines_guard = MACHINES.lock().unwrap();
                 let _ = (data_type.read_function)(&data_file_path, &mut machines_guard);
 
-                clean_last_line()?;
-
-                println!(
-                    "{} {} {} loaded successfully",
-                    style(step).bold().dim(),
-                    SUCCESS,
-                    style(data_file).cyan(), 
-                );
+                 let message = format!("{} loaded successfully", style(data_file).cyan());
+                print_step_message(&message, count, DATA_TYPES.len(), SUCCESS);
 
             }
         } else {
-            clean_last_line()?;
+            
+            let message = format!("File for {} not found", data_type.name);
+            print_step_message(&message, count, DATA_TYPES.len(), ERROR);
 
-            println!(
-                "{} {} File for {} not found",
-                style(step).bold().dim(),
-                ERROR,
-                data_type.name
-            );
         }
     }
     let machines_guard = MACHINES.lock().unwrap();
