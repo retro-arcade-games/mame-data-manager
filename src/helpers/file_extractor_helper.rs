@@ -54,7 +54,7 @@ fn extract_zip(archive_path: &str, destination_folder: &str) -> Result<(), Box<d
         pb.inc(1);
     }
 
-    pb.finish_with_message("Extraction complete");
+    pb.finish_and_clear();
 
     Ok(())
 }
@@ -75,7 +75,7 @@ fn extract_7zip(archive_path: &str, destination_folder: &str) -> Result<(), Box<
 
     decompress_file(archive_path, destination_folder)?;
 
-    pb.finish_with_message("Extraction complete");
+    pb.finish_and_clear();
 
     Ok(())
 }

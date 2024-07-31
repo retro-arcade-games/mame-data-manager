@@ -206,13 +206,36 @@ fn download_files() -> Result<(), Box<dyn Error>> {
  * Extract the downloaded files.
  */
 fn extract_files() -> Result<(), Box<dyn Error>> {
+    let mut count = 0;
+
     for data_type in DATA_TYPES.iter() {
+
+        count += 1;
+        let step = format!("[{}/{}]", count, DATA_TYPES.len());
 
         let extracted_folder = format!("{}{}", PATHS.extracted_path, data_type.name.to_lowercase());
 
+        println!(
+            "{} {} Checking if {} file already extracted...",
+            style(step.clone()).bold().dim(),
+            INFO,
+            data_type.name
+        );
+
         // Check if the file already exists in the extracted folder
         if let Some(existing_file_path) = find_file_with_pattern(&extracted_folder, &data_type.file_name_pattern) {
-            println!("File {} already exists, skipping extraction.", existing_file_path);
+            
+            let data_file = existing_file_path.split('/').last().unwrap();
+
+            clean_last_line()?;
+            
+            println!(
+                "{} {} {} already exists (skipped)",
+                style(step.clone()).bold().dim(),
+                INFO,
+                style(data_file).cyan(), 
+            );
+            
             continue;
         }
 
@@ -224,7 +247,16 @@ fn extract_files() -> Result<(), Box<dyn Error>> {
                 file_name
             },
             None => {
-                println!("URL for {} not found, skipping.", data_type.name);
+
+                clean_last_line()?;
+
+                println!(
+                    "{} {} URL for {} not found (skipped)",
+                    style(step).bold().dim(),
+                    ERROR,
+                    data_type.name
+                );
+
                 continue;
             }
         };
@@ -234,11 +266,39 @@ fn extract_files() -> Result<(), Box<dyn Error>> {
 
         // Check if the file exists
         if Path::new(&file_path).exists() {
-            println!("Extracting file {} to {}", file_path, extracted_folder);
+
+            clean_last_line()?;
+
+            println!(
+                "{} {} Extracting file {} to {}",
+                style(step.clone()).bold().dim(),
+                DOWNLOAD,
+                file_path, 
+                extracted_folder
+            );
+
             extract_file(&file_path, &extracted_folder)?;
 
+            clean_last_line()?;
+
+            println!(
+                "{} {} {} extracted successfully",
+                style(step).bold().dim(),
+                SUCCESS,
+                style(file_name).cyan(), 
+            );
+
         } else {
-            println!("File for {} not found, skipping.", file_name);
+
+            clean_last_line()?;
+
+            println!(
+                "{} {} File for {} not found (skipped)",
+                style(step).bold().dim(),
+                ERROR,
+                file_name
+            );
+
         }
         
     }
