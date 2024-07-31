@@ -81,7 +81,7 @@ pub fn read_history_file(file_path: &str, machines: &mut HashMap<String, Machine
         }
     }
 
-    pb.finish_with_message("Processing complete");
+    pb.finish_and_clear();
     Ok(())
 }
 

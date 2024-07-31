@@ -32,8 +32,11 @@ const PATHS: Paths = Paths {
 
 static DOWNLOAD: Emoji<'_, '_> = Emoji("🌐 ", "");
 static INFO: Emoji<'_, '_> = Emoji("ℹ️  ", "");
-static ERROR: Emoji<'_, '_> = Emoji("🚨 ", ":-)");
-static SUCCESS: Emoji<'_, '_> = Emoji("✅ ", ":-)");
+static ERROR: Emoji<'_, '_> = Emoji("🚨 ", "");
+static SUCCESS: Emoji<'_, '_> = Emoji("✅ ", "");
+static LOUPE: Emoji<'_, '_> = Emoji("🔍 ", "");
+static FOLDER: Emoji<'_, '_> = Emoji("🗂 ", "");
+static READ: Emoji<'_, '_> = Emoji("🧾 ", "");
 
 lazy_static! {
     static ref URL_MAP: Mutex<HashMap<String, String>> = Mutex::new(HashMap::new());
@@ -218,7 +221,7 @@ fn extract_files() -> Result<(), Box<dyn Error>> {
         println!(
             "{} {} Checking if {} file already extracted...",
             style(step.clone()).bold().dim(),
-            INFO,
+            LOUPE,
             data_type.name
         );
 
@@ -251,7 +254,7 @@ fn extract_files() -> Result<(), Box<dyn Error>> {
                 clean_last_line()?;
 
                 println!(
-                    "{} {} URL for {} not found (skipped)",
+                    "{} {} URL for {} not found",
                     style(step).bold().dim(),
                     ERROR,
                     data_type.name
@@ -272,7 +275,7 @@ fn extract_files() -> Result<(), Box<dyn Error>> {
             println!(
                 "{} {} Extracting file {} to {}",
                 style(step.clone()).bold().dim(),
-                DOWNLOAD,
+                FOLDER,
                 file_path, 
                 extracted_folder
             );
@@ -293,7 +296,7 @@ fn extract_files() -> Result<(), Box<dyn Error>> {
             clean_last_line()?;
 
             println!(
-                "{} {} File for {} not found (skipped)",
+                "{} {} File for {} not found",
                 style(step).bold().dim(),
                 ERROR,
                 file_name
@@ -309,16 +312,57 @@ fn extract_files() -> Result<(), Box<dyn Error>> {
  * Read the extracted files.
  */
 fn read_files() -> Result<(), Box<dyn Error>> {
+    let mut count = 0;
+
     for data_type in DATA_TYPES.iter() {
+
+        count += 1;
+        let step = format!("[{}/{}]", count, DATA_TYPES.len());
+
         let extracted_folder = format!("{}{}", PATHS.extracted_path, data_type.name.to_lowercase());
+
+        println!(
+            "{} {} Checking if {} file exists...",
+            style(step.clone()).bold().dim(),
+            LOUPE,
+            data_type.name
+        );
 
         if let Some(data_file_path) = find_file_with_pattern(&extracted_folder, &data_type.file_name_pattern) {
             {
+
+                let data_file = data_file_path.split('/').last().unwrap();
+
+                clean_last_line()?;
+
+                println!(
+                    "{} {} Reading {}",
+                    style(step.clone()).bold().dim(),
+                    READ,
+                    style(data_file).cyan(), 
+                );
                 let mut machines_guard = MACHINES.lock().unwrap();
                 let _ = (data_type.read_function)(&data_file_path, &mut machines_guard);
+
+                clean_last_line()?;
+
+                println!(
+                    "{} {} {} loaded successfully",
+                    style(step).bold().dim(),
+                    SUCCESS,
+                    style(data_file).cyan(), 
+                );
+
             }
         } else {
-            println!("No file found with the given pattern for data type: {}", data_type.name);
+            clean_last_line()?;
+
+            println!(
+                "{} {} File for {} not found",
+                style(step).bold().dim(),
+                ERROR,
+                data_type.name
+            );
         }
     }
     let machines_guard = MACHINES.lock().unwrap();

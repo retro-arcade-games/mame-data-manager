@@ -83,7 +83,7 @@ pub fn read_nplayers_file(file_path: &str, machines: &mut HashMap<String, Machin
         }
     }
 
-    pb.finish_with_message("Processing complete");
+    pb.finish_and_clear();
     Ok(())
 }
 
