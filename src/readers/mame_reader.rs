@@ -2,10 +2,10 @@ use crate::helpers::ui_helper::init_progress_bar;
 use crate::models::{BiosSet, DeviceRef, Disk, Machine, Rom, Sample, Software};
 use quick_xml::events::Event;
 use quick_xml::Reader;
-use roxmltree::Document;
 use std::collections::HashMap;
 use std::error::Error;
-use std::fs;
+use std::fs::{self, File};
+use std::io::BufReader;
 
 /**
  * The `mame.dat` file format represents data about arcade machines and their components.
@@ -62,6 +62,9 @@ pub fn read_mame_file(
     file_path: &str,
     machines: &mut HashMap<String, Machine>,
 ) -> Result<(), Box<dyn std::error::Error>> {
+    let file = File::open(file_path)?;
+    let reader = BufReader::new(file);
+
     // Read the file content
     let file_content = fs::read_to_string(file_path)?;
 
@@ -69,20 +72,245 @@ pub fn read_mame_file(
     let total_elements = count_total_elements(&file_content)?;
     let pb = init_progress_bar(total_elements as u64, "machines in mame.dat");
 
-    // Parse XML document
-    let doc =
-        Document::parse(&file_content).map_err(|e| Box::new(e) as Box<dyn std::error::Error>)?;
+    let mut xml_reader = Reader::from_reader(reader);
+    xml_reader.trim_text(true);
 
-    // Process each node in the XML document
-    for node in doc.descendants() {
-        if node.tag_name().name() == "machine" {
-            let machine = parse_machine_element(&node);
-            machines.insert(machine.name.clone(), machine);
-            pb.inc(1);
+    let mut buf = Vec::with_capacity(8 * 1024); 
+
+    let mut current_machine: Option<Machine> = None;
+
+    loop {
+        match xml_reader.read_event(&mut buf) {
+            Ok(Event::Start(ref e)) => {
+                process_node(e, &mut xml_reader, &mut current_machine)?;
+                match e.name() {
+                    b"machine" => pb.inc(1),
+                    _ => (),
+                }
+            }
+            Ok(Event::Empty(ref e)) => {
+                process_node(e, &mut xml_reader, &mut current_machine)?;
+            }
+            Ok(Event::End(ref e)) => match e.name() {
+                b"machine" => {
+                    if let Some(machine) = current_machine.take() {
+                        machines.insert(machine.name.clone(), machine);
+                    }
+                }
+                _ => (),
+            },
+            Ok(Event::Eof) => break,
+            Err(e) => {
+                println!("Error: {:?}", e);
+                break;
+            }
+            _ => (),
         }
+        buf.clear();
     }
 
     pb.finish_and_clear();
+
+    Ok(())
+}
+
+fn process_node(
+    e: &quick_xml::events::BytesStart,
+    reader: &mut Reader<BufReader<File>>,
+    current_machine: &mut Option<Machine>,
+) -> Result<(), Box<dyn std::error::Error>> {
+    match e.name() {
+        b"machine" => {
+            let mut machine = Machine {
+                name: String::new(),
+                source_file: None,
+                rom_of: None,
+                clone_of: None,
+                is_bios: None,
+                is_device: None,
+                runnable: None,
+                is_mechanical: None,
+                sample_of: None,
+                description: None,
+                year: None,
+                manufacturer: None,
+                bios_sets: vec![],
+                roms: vec![],
+                device_refs: vec![],
+                software_list: vec![],
+                samples: vec![],
+                driver_status: None,
+                languages: vec![],
+                players: None,
+                series: None,
+                genre: None,
+                subgenre: None,
+                is_mature: None,
+                history_sections: vec![],
+                disks: vec![],
+            };
+            let attrs = e.attributes().map(|a| a.unwrap());
+            for attr in attrs {
+                match attr.key {
+                    b"name" => machine.name = attr.unescape_and_decode_value(reader)?,
+                    b"sourcefile" => machine.source_file = Some(attr.unescape_and_decode_value(reader)?),
+                    b"romof" => machine.rom_of = Some(attr.unescape_and_decode_value(reader)?),
+                    b"cloneof" => machine.clone_of = Some(attr.unescape_and_decode_value(reader)?),
+                    b"isbios" => machine.is_bios = Some(attr.unescape_and_decode_value(reader)? == "yes"),
+                    b"isdevice" => machine.is_device = Some(attr.unescape_and_decode_value(reader)? == "yes"),
+                    b"runnable" => machine.runnable = Some(attr.unescape_and_decode_value(reader)? == "yes"),
+                    b"ismechanical" => machine.is_mechanical = Some(attr.unescape_and_decode_value(reader)? == "yes"),
+                    b"sampleof" => machine.sample_of = Some(attr.unescape_and_decode_value(reader)?),
+                    _ => {}
+                }
+            }
+            *current_machine = Some(machine);
+        }
+        b"description" => {
+            if let Some(ref mut machine) = current_machine {
+                machine.description = Some(reader.read_text(b"description", &mut Vec::new())?);
+            }
+        }
+        b"year" => {
+            if let Some(ref mut machine) = current_machine {
+                machine.year = Some(reader.read_text(b"year", &mut Vec::new())?);
+            }
+        }
+        b"manufacturer" => {
+            if let Some(ref mut machine) = current_machine {
+                machine.manufacturer = Some(reader.read_text(b"manufacturer", &mut Vec::new())?);
+            }
+        }
+        b"biosset" => {
+            let mut bios_set = BiosSet {
+                name: String::new(),
+                description: String::new(),
+            };
+
+            let attrs = e.attributes().map(|a| a.unwrap());
+            for attr in attrs {
+                match attr.key {
+                    b"name" => bios_set.name = attr.unescape_and_decode_value(reader)?,
+                    b"description" => bios_set.description = attr.unescape_and_decode_value(reader)?,
+                    _ => {}
+                }
+            }
+            if let Some(ref mut machine) = current_machine {
+                machine.bios_sets.push(bios_set);
+            }
+            
+        }
+        b"rom" => {
+            let mut rom = Rom {
+                name: String::new(),
+                merge: None,
+                size: 0,
+                crc: None,
+                sha1: None,
+                status: None,
+            };
+            let attrs = e.attributes().map(|a| a.unwrap());
+            for attr in attrs {
+                match attr.key {
+                    b"name" => rom.name = attr.unescape_and_decode_value(reader)?,
+                    b"merge" => rom.merge = Some(attr.unescape_and_decode_value(reader)?),
+                    b"size" => rom.size = attr.unescape_and_decode_value(reader)?.parse().unwrap_or(0),
+                    b"crc" => rom.crc = Some(attr.unescape_and_decode_value(reader)?),
+                    b"sha1" => rom.sha1 = Some(attr.unescape_and_decode_value(reader)?),
+                    b"status" => rom.status = Some(attr.unescape_and_decode_value(reader)?),
+                    _ => {}
+                }
+            }
+            if let Some(ref mut machine) = current_machine {
+                machine.roms.push(rom);
+            }
+        }
+        b"device_ref" => {
+            let mut device_ref = DeviceRef {
+                name: String::new(),
+            };
+
+            let attrs = e.attributes().map(|a| a.unwrap());
+            for attr in attrs {
+                match attr.key {
+                    b"name" => device_ref.name = attr.unescape_and_decode_value(reader)?,
+                    _ => {}
+                }
+            }
+            if let Some(ref mut machine) = current_machine {
+                machine.device_refs.push(device_ref);
+            }
+        }
+        b"softwarelist" => {
+            let mut software = Software {
+                name: String::new(),
+            };
+
+            let attrs = e.attributes().map(|a| a.unwrap());
+            for attr in attrs {
+                match attr.key {
+                    b"name" => software.name = attr.unescape_and_decode_value(reader)?,
+                    _ => {}
+                }
+            }
+            if let Some(ref mut machine) = current_machine {
+                machine.software_list.push(software);
+            }
+        }
+        b"sample" => {
+            let mut sample = Sample {
+                name: String::new(),
+            };
+
+            let attrs = e.attributes().map(|a| a.unwrap());
+            for attr in attrs {
+                match attr.key {
+                    b"name" => sample.name = attr.unescape_and_decode_value(reader)?,
+                    _ => {}
+                }
+            }
+            if let Some(ref mut machine) = current_machine {
+                machine.samples.push(sample);
+            }
+        }
+        b"disk" => {
+            let mut disk = Disk {
+                name: String::new(),
+                sha1: None,
+                merge: None,
+                status: None,
+                region: None,
+            };
+            let attrs = e.attributes().map(|a| a.unwrap());
+            for attr in attrs {
+                match attr.key {
+                    b"name" => disk.name = attr.unescape_and_decode_value(reader)?,
+                    b"sha1" => disk.sha1 = Some(attr.unescape_and_decode_value(reader)?),
+                    b"merge" => disk.merge = Some(attr.unescape_and_decode_value(reader)?),
+                    b"status" => disk.status = Some(attr.unescape_and_decode_value(reader)?),
+                    b"region" => disk.region = Some(attr.unescape_and_decode_value(reader)?),
+                    _ => {}
+                }
+            }
+            if let Some(ref mut machine) = current_machine {
+                machine.disks.push(disk);
+            }
+        }
+        b"driver" => {
+            let mut driver_status = String::new();
+            let attrs = e.attributes().map(|a| a.unwrap());
+            for attr in attrs {
+                match attr.key {
+                    b"status" => driver_status = attr.unescape_and_decode_value(reader)?,
+                    _ => {}
+                }
+            }
+            if let Some(ref mut machine) = current_machine {
+                machine.driver_status = Some(driver_status);
+            }
+        }
+        _ => (),
+    }
 
     Ok(())
 }
@@ -112,138 +340,4 @@ pub fn count_total_elements(file_content: &str) -> Result<usize, Box<dyn Error>>
     }
 
     Ok(count)
-}
-
-/**
- * Parse the given machine element and return a Machine struct.
- */
-fn parse_machine_element(node: &roxmltree::Node) -> Machine {
-    let mut machine = Machine {
-        name: String::new(),
-        source_file: None,
-        rom_of: None,
-        clone_of: None,
-        is_bios: None,
-        is_device: None,
-        runnable: None,
-        is_mechanical: None,
-        sample_of: None,
-        description: None,
-        year: None,
-        manufacturer: None,
-        bios_sets: vec![],
-        roms: vec![],
-        device_refs: vec![],
-        software_list: vec![],
-        samples: vec![],
-        driver_status: None,
-        languages: vec![],
-        players: None,
-        series: None,
-        genre: None,
-        subgenre: None,
-        is_mature: None,
-        history_sections: vec![],
-        disks: vec![],
-    };
-
-    for attr in node.attributes() {
-        match attr.name() {
-            "name" => machine.name = attr.value().to_string(),
-            "sourcefile" => machine.source_file = Some(attr.value().to_string()),
-            "romof" => machine.rom_of = Some(attr.value().to_string()),
-            "cloneof" => machine.clone_of = Some(attr.value().to_string()),
-            "isbios" => machine.is_bios = Some(attr.value() == "yes"),
-            "isdevice" => machine.is_device = Some(attr.value() == "yes"),
-            "runnable" => machine.runnable = Some(attr.value() == "yes"),
-            "ismechanical" => machine.is_mechanical = Some(attr.value() == "yes"),
-            "sampleof" => machine.sample_of = Some(attr.value().to_string()),
-            _ => {}
-        }
-    }
-
-    for child in node.children() {
-        if child.is_element() {
-            parse_child_element(child.tag_name().name(), &child, &mut machine);
-        }
-    }
-
-    machine
-}
-
-/**
- * Parse the given child element and update the given Machine struct.
- */
-fn parse_child_element(name: &str, node: &roxmltree::Node, machine: &mut Machine) {
-    match name {
-        "description" => {
-            if let Some(text) = node.text() {
-                machine.description = Some(text.to_string());
-            }
-        }
-        "year" => {
-            if let Some(text) = node.text() {
-                machine.year = Some(text.to_string());
-            }
-        }
-        "manufacturer" => {
-            if let Some(text) = node.text() {
-                machine.manufacturer = Some(text.to_string());
-            }
-        }
-        "driver" => {
-            if let Some(status) = node.attribute("status") {
-                machine.driver_status = Some(status.to_string());
-            }
-        }
-        "biosset" => {
-            let bios_set = BiosSet {
-                name: node.attribute("name").unwrap_or("").to_string(),
-                description: node.attribute("description").unwrap_or("").to_string(),
-            };
-            machine.bios_sets.push(bios_set);
-        }
-        "rom" => {
-            let rom = Rom {
-                name: node.attribute("name").unwrap_or("").to_string(),
-                merge: node.attribute("merge").map(|s| s.to_string()),
-                size: node.attribute("size").unwrap_or("0").parse().unwrap_or(0),
-                crc: node.attribute("crc").map(|s| s.to_string()),
-                sha1: node.attribute("sha1").map(|s| s.to_string()),
-                status: node.attribute("status").map(|s| s.to_string()),
-            };
-            machine.roms.push(rom);
-        }
-        "device_ref" => {
-            let device_ref = DeviceRef {
-                name: node.attribute("name").unwrap_or("").to_string(),
-            };
-            machine.device_refs.push(device_ref);
-        }
-        "softwarelist" => {
-            let software = Software {
-                name: node.attribute("name").unwrap_or("").to_string(),
-            };
-            machine.software_list.push(software);
-        }
-        "sample" => {
-            let sample = Sample {
-                name: node.attribute("name").unwrap_or("").to_string(),
-            };
-            machine.samples.push(sample);
-        }
-        "disk" => {
-            let disk = Disk {
-                name: node.attribute("name").unwrap_or("").to_string(),
-                sha1: node.attribute("sha1").map(|s| s.to_string()),
-                merge: node.attribute("merge").map(|s| s.to_string()),
-                region: node.attribute("region").map(|s| s.to_string()),
-                status: node.attribute("status").map(|s| s.to_string()),
-            };
-            machine.disks.push(disk);
-        }
-        _ => {
-            println!("Unknown element: {}", name); // Debugging line to catch any unknown elements
-        }
-    }
 }

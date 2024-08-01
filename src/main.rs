@@ -219,9 +219,11 @@ fn extract_files() -> Result<(), Box<dyn Error>> {
  * Read the extracted files.
  */
 fn read_files() -> Result<(), Box<dyn Error>> {
+
     let mut count = 0;
 
     for data_type in DATA_TYPES.iter() {
+
         count += 1;
 
         let extracted_folder = format!("{}{}", PATHS.extracted_path, data_type.name.to_lowercase());
@@ -233,6 +235,7 @@ fn read_files() -> Result<(), Box<dyn Error>> {
             find_file_with_pattern(&extracted_folder, &data_type.file_name_pattern)
         {
             {
+                let time = std::time::Instant::now();
                 let data_file = data_file_path.split('/').last().unwrap();
 
                 let message = format!("Reading {}...", style(data_file).cyan());
@@ -241,7 +244,8 @@ fn read_files() -> Result<(), Box<dyn Error>> {
                 let mut machines_guard = MACHINES.lock().unwrap();
                 let _ = (data_type.read_function)(&data_file_path, &mut machines_guard);
 
-                let message = format!("{} loaded successfully", style(data_file).cyan());
+                let rounded_secs = (time.elapsed().as_secs_f32() * 10.0).round() / 10.0;
+                let message = format!("{} loaded in {}s", style(data_file).cyan(), rounded_secs);
                 print_step_message(&message, count, DATA_TYPES.len(), SUCCESS);
             }
         } else {
@@ -250,12 +254,12 @@ fn read_files() -> Result<(), Box<dyn Error>> {
         }
     }
     let machines_guard = MACHINES.lock().unwrap();
-    if let Some(machine) = machines_guard.get("mk") {
+    if let Some(machine) = machines_guard.get("99bottles") {
         let json_data =
             to_string_pretty(&machine.name).expect("Failed to serialize machine to JSON");
-        println!("Machine found: Name: mk, Data: {}", json_data);
+        println!("Machine found: Name: 99bottles, Data: {}", json_data);
     } else {
-        println!("Machine with name 'mk' not found");
+        println!("Machine with name '99bottles' not found");
     }
 
     Ok(())
