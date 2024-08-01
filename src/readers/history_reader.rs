@@ -1,5 +1,5 @@
+use crate::helpers::ui_helper::init_progress_bar;
 use crate::models::{HistorySection, Machine};
-use indicatif::{ProgressBar, ProgressStyle};
 use quick_xml::events::Event;
 use quick_xml::Reader;
 use roxmltree::Document;
@@ -53,13 +53,8 @@ pub fn read_history_file(
     reader.read_to_string(&mut content)?;
 
     // Get the total number of entries from the content
-    let total_entries = count_total_elements(&content)?;
-    let pb = ProgressBar::new(total_entries as u64);
-    pb.set_style(
-        ProgressStyle::default_bar()
-            .template("{spinner:.green} [{elapsed_precise}] [{bar:40.cyan/blue}] {pos}/{len} entries in history.xml ({eta})")
-            .progress_chars("#>-"),
-    );
+    let total_elements = count_total_elements(&content)?;
+    let pb = init_progress_bar(total_elements as u64, "entries in history.xml");
 
     // Parse the XML content
     let doc = Document::parse(&content)?;

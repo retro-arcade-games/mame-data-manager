@@ -1,5 +1,5 @@
+use crate::helpers::ui_helper::init_progress_bar;
 use crate::models::Machine;
-use indicatif::{ProgressBar, ProgressStyle};
 use std::collections::HashMap;
 use std::error::Error;
 use std::fs::File;
@@ -31,12 +31,7 @@ pub fn read_languages_file(
 ) -> Result<(), Box<dyn Error>> {
     // Count the total number of elements for the progress bar
     let total_elements = count_total_elements(file_path)?;
-    let pb = ProgressBar::new(total_elements as u64);
-    pb.set_style(
-        ProgressStyle::default_bar()
-            .template("{spinner:.green} [{elapsed_precise}] [{bar:40.cyan/blue}] {pos}/{len} roms in languages.ini ({eta})")
-            .progress_chars("#>-"),
-    );
+    let pb = init_progress_bar(total_elements as u64, "roms in languages.ini");
 
     // Open the file and create a buffered reader
     let file = File::open(file_path)?;

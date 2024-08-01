@@ -38,6 +38,17 @@ pub fn println_step_message(message: &str, step: usize, total_steps: usize, icon
     println!("{} {} {}", style(step).bold().dim(), icon, message,);
 }
 
+pub fn init_progress_bar(total: u64, message: &str) -> indicatif::ProgressBar {
+    let pb = indicatif::ProgressBar::new(total);
+    pb.set_style(
+        indicatif::ProgressStyle::default_bar()
+        .template("{spinner:.green} [{elapsed_precise}] [{bar:40.cyan/blue}] {pos}/{len} {msg} ({eta})")
+            .progress_chars("#>-"),
+    );
+    pb.set_message(message.to_string());
+    pb
+}
+
 pub fn show_splash_screen() {
     clear_console();
     println!(" █    ███         ███    █");

@@ -1,5 +1,5 @@
+use crate::helpers::ui_helper::init_progress_bar;
 use crate::models::Machine;
-use indicatif::{ProgressBar, ProgressStyle};
 use std::collections::HashMap;
 use std::error::Error;
 use std::fs::File;
@@ -33,12 +33,7 @@ pub fn read_catver_file(
     machines: &mut HashMap<String, Machine>,
 ) -> Result<(), Box<dyn Error>> {
     let total_elements = count_total_elements(file_path)?;
-    let pb = ProgressBar::new(total_elements as u64);
-    pb.set_style(
-        ProgressStyle::default_bar()
-            .template("{spinner:.green} [{elapsed_precise}] [{bar:40.cyan/blue}] {pos}/{len} roms in catver.ini ({eta})")
-            .progress_chars("#>-"),
-    );
+    let pb = init_progress_bar(total_elements as u64, "roms in catver.ini");
 
     let to_ignore = ["[", ";", "", " "];
 
@@ -73,9 +68,9 @@ pub fn read_catver_file(
                     machine.genre = Some(genre);
                     machine.subgenre = Some(subgenre);
                     machine.is_mature = Some(is_mature);
-                    pb.inc(1);
                 }
             }
+            pb.inc(1);
         }
     }
 

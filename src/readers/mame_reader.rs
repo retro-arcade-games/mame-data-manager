@@ -1,5 +1,5 @@
+use crate::helpers::ui_helper::init_progress_bar;
 use crate::models::{BiosSet, DeviceRef, Disk, Machine, Rom, Sample, Software};
-use indicatif::{ProgressBar, ProgressStyle};
 use quick_xml::events::Event;
 use quick_xml::Reader;
 use roxmltree::Document;
@@ -66,16 +66,8 @@ pub fn read_mame_file(
     let file_content = fs::read_to_string(file_path)?;
 
     // Count the number of machines in the file
-    let total_machines = count_total_elements(&file_content)?;
-    let pb = ProgressBar::new(total_machines as u64);
-
-    pb.set_style(
-        ProgressStyle::default_bar()
-            .template(
-                "{spinner:.green} [{elapsed_precise}] [{bar:40.cyan/blue}] {pos}/{len} machines in mame.dat ({eta})",
-            )
-            .progress_chars("#>-"),
-    );
+    let total_elements = count_total_elements(&file_content)?;
+    let pb = init_progress_bar(total_elements as u64, "machines in mame.dat");
 
     // Parse XML document
     let doc =

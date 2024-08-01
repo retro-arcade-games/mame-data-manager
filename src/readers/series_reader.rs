@@ -1,5 +1,5 @@
+use crate::helpers::ui_helper::init_progress_bar;
 use crate::models::Machine;
-use indicatif::{ProgressBar, ProgressStyle};
 use std::collections::HashMap;
 use std::error::Error;
 use std::fs::File;
@@ -30,12 +30,7 @@ pub fn read_series_file(
     machines: &mut HashMap<String, Machine>,
 ) -> Result<(), Box<dyn Error>> {
     let total_elements = count_total_elements(file_path)?;
-    let pb = ProgressBar::new(total_elements as u64);
-    pb.set_style(
-        ProgressStyle::default_bar()
-            .template("{spinner:.green} [{elapsed_precise}] [{bar:40.cyan/blue}] {pos}/{len} roms in series.ini ({eta})")
-            .progress_chars("#>-"),
-    );
+    let pb = init_progress_bar(total_elements as u64, "roms in series.ini");
 
     let to_ignore = [";", "", " ", "", "[FOLDER_SETTINGS]", "[ROOT_FOLDER]"];
 
