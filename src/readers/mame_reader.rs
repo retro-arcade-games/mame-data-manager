@@ -75,7 +75,7 @@ pub fn read_mame_file(
     let mut xml_reader = Reader::from_reader(reader);
     xml_reader.trim_text(true);
 
-    let mut buf = Vec::with_capacity(8 * 1024); 
+    let mut buf = Vec::with_capacity(8 * 1024);
 
     let mut current_machine: Option<Machine> = None;
 
@@ -83,10 +83,6 @@ pub fn read_mame_file(
         match xml_reader.read_event(&mut buf) {
             Ok(Event::Start(ref e)) => {
                 process_node(e, &mut xml_reader, &mut current_machine)?;
-                match e.name() {
-                    b"machine" => pb.inc(1),
-                    _ => (),
-                }
             }
             Ok(Event::Empty(ref e)) => {
                 process_node(e, &mut xml_reader, &mut current_machine)?;
@@ -96,14 +92,12 @@ pub fn read_mame_file(
                     if let Some(machine) = current_machine.take() {
                         machines.insert(machine.name.clone(), machine);
                     }
+                    pb.inc(1);
                 }
                 _ => (),
             },
             Ok(Event::Eof) => break,
-            Err(e) => {
-                println!("Error: {:?}", e);
-                break;
-            }
+            Err(e) => return Err(Box::new(e)),
             _ => (),
         }
         buf.clear();
@@ -114,6 +108,9 @@ pub fn read_mame_file(
     Ok(())
 }
 
+/**
+ * Process the given XML node and update the current machine with the node's data.
+ */
 fn process_node(
     e: &quick_xml::events::BytesStart,
     reader: &mut Reader<BufReader<File>>,
@@ -153,14 +150,27 @@ fn process_node(
             for attr in attrs {
                 match attr.key {
                     b"name" => machine.name = attr.unescape_and_decode_value(reader)?,
-                    b"sourcefile" => machine.source_file = Some(attr.unescape_and_decode_value(reader)?),
+                    b"sourcefile" => {
+                        machine.source_file = Some(attr.unescape_and_decode_value(reader)?)
+                    }
                     b"romof" => machine.rom_of = Some(attr.unescape_and_decode_value(reader)?),
                     b"cloneof" => machine.clone_of = Some(attr.unescape_and_decode_value(reader)?),
-                    b"isbios" => machine.is_bios = Some(attr.unescape_and_decode_value(reader)? == "yes"),
-                    b"isdevice" => machine.is_device = Some(attr.unescape_and_decode_value(reader)? == "yes"),
-                    b"runnable" => machine.runnable = Some(attr.unescape_and_decode_value(reader)? == "yes"),
-                    b"ismechanical" => machine.is_mechanical = Some(attr.unescape_and_decode_value(reader)? == "yes"),
-                    b"sampleof" => machine.sample_of = Some(attr.unescape_and_decode_value(reader)?),
+                    b"isbios" => {
+                        machine.is_bios = Some(attr.unescape_and_decode_value(reader)? == "yes")
+                    }
+                    b"isdevice" => {
+                        machine.is_device = Some(attr.unescape_and_decode_value(reader)? == "yes")
+                    }
+                    b"runnable" => {
+                        machine.runnable = Some(attr.unescape_and_decode_value(reader)? == "yes")
+                    }
+                    b"ismechanical" => {
+                        machine.is_mechanical =
+                            Some(attr.unescape_and_decode_value(reader)? == "yes")
+                    }
+                    b"sampleof" => {
+                        machine.sample_of = Some(attr.unescape_and_decode_value(reader)?)
+                    }
                     _ => {}
                 }
             }
@@ -191,14 +201,15 @@ fn process_node(
             for attr in attrs {
                 match attr.key {
                     b"name" => bios_set.name = attr.unescape_and_decode_value(reader)?,
-                    b"description" => bios_set.description = attr.unescape_and_decode_value(reader)?,
+                    b"description" => {
+                        bios_set.description = attr.unescape_and_decode_value(reader)?
+                    }
                     _ => {}
                 }
             }
             if let Some(ref mut machine) = current_machine {
                 machine.bios_sets.push(bios_set);
             }
-            
         }
         b"rom" => {
             let mut rom = Rom {
@@ -214,7 +225,9 @@ fn process_node(
                 match attr.key {
                     b"name" => rom.name = attr.unescape_and_decode_value(reader)?,
                     b"merge" => rom.merge = Some(attr.unescape_and_decode_value(reader)?),
-                    b"size" => rom.size = attr.unescape_and_decode_value(reader)?.parse().unwrap_or(0),
+                    b"size" => {
+                        rom.size = attr.unescape_and_decode_value(reader)?.parse().unwrap_or(0)
+                    }
                     b"crc" => rom.crc = Some(attr.unescape_and_decode_value(reader)?),
                     b"sha1" => rom.sha1 = Some(attr.unescape_and_decode_value(reader)?),
                     b"status" => rom.status = Some(attr.unescape_and_decode_value(reader)?),

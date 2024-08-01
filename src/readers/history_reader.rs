@@ -2,11 +2,10 @@ use crate::helpers::ui_helper::init_progress_bar;
 use crate::models::{HistorySection, Machine};
 use quick_xml::events::Event;
 use quick_xml::Reader;
-use roxmltree::Document;
 use std::collections::HashMap;
 use std::error::Error;
-use std::fs::File;
-use std::io::{BufReader, Read};
+use std::fs::{self, File};
+use std::io::BufReader;
 
 /**
  * The XML file follows this general structure:
@@ -46,77 +45,103 @@ pub fn read_history_file(
     file_path: &str,
     machines: &mut HashMap<String, Machine>,
 ) -> Result<(), Box<dyn Error>> {
-    // Read the entire file content into a string
     let file = File::open(file_path)?;
-    let mut reader = BufReader::new(file);
-    let mut content = String::new();
-    reader.read_to_string(&mut content)?;
+    let reader = BufReader::new(file);
 
-    // Get the total number of entries from the content
-    let total_elements = count_total_elements(&content)?;
+    // Read the file content
+    let file_content = fs::read_to_string(file_path)?;
+
+    // Count the number of machines in the file
+    let total_elements = count_total_elements(&file_content)?;
     let pb = init_progress_bar(total_elements as u64, "entries in history.xml");
 
-    // Parse the XML content
-    let doc = Document::parse(&content)?;
+    let mut xml_reader = Reader::from_reader(reader);
+    xml_reader.trim_text(true);
 
-    let mut current_entry = None;
+    let mut buf = Vec::with_capacity(8 * 1024);
 
-    for node in doc.descendants() {
-        match node.tag_name().name() {
-            "entry" => {
-                current_entry = Some(parse_entry(node));
+    let mut current_entry: Option<HistoryEntry> = None;
+
+    loop {
+        match xml_reader.read_event(&mut buf) {
+            Ok(Event::Start(ref e)) => {
+                process_node(e, &mut xml_reader, &mut current_entry)?;
             }
-            _ => {}
-        }
-
-        if let Some(entry) = current_entry.take() {
-            for name in entry.names {
-                if let Some(machine) = machines.get_mut(&name) {
-                    machine.history_sections = entry.sections.clone();
+            Ok(Event::Empty(ref e)) => {
+                process_node(e, &mut xml_reader, &mut current_entry)?;
+            }
+            Ok(Event::End(ref e)) => match e.name() {
+                b"entry" => {
+                    if let Some(entry) = current_entry.take() {
+                        for name in entry.names {
+                            if let Some(machine) = machines.get_mut(&name) {
+                                machine.history_sections = entry.sections.clone();
+                            }
+                        }
+                        pb.inc(1);
+                    }
                 }
-            }
-            pb.inc(1);
+                _ => (),
+            },
+            Ok(Event::Eof) => break,
+            Err(e) => return Err(Box::new(e)),
+            _ => (),
         }
+        buf.clear();
     }
 
     pb.finish_and_clear();
+
     Ok(())
 }
 
 /**
- * Parse an <entry> node from the history XML file.
+ * Process a node in the history XML file.
  */
-fn parse_entry(node: roxmltree::Node) -> ParsedEntry {
-    let mut names = Vec::new();
-    let mut sections = Vec::new();
-    let mut current_section_name = "description".to_string();
-
-    for child in node.children() {
-        match child.tag_name().name() {
-            "systems" => {
-                for system in child.children() {
-                    if system.tag_name().name() == "system" {
-                        if let Some(name) = system.attribute("name") {
-                            names.push(name.to_string());
-                        }
-                    }
+fn process_node(
+    e: &quick_xml::events::BytesStart,
+    reader: &mut Reader<BufReader<File>>,
+    current_entry: &mut Option<HistoryEntry>,
+) -> Result<(), Box<dyn std::error::Error>> {
+    match e.name() {
+        b"entry" => {
+            let entry = HistoryEntry {
+                names: Vec::new(),
+                sections: Vec::new(),
+            };
+            *current_entry = Some(entry);
+        }
+        b"system" => {
+            let mut system_name = String::new();
+            let attrs = e.attributes().map(|a| a.unwrap());
+            for attr in attrs {
+                match attr.key {
+                    b"name" => system_name = attr.unescape_and_decode_value(reader)?,
+                    _ => {}
                 }
             }
-            "text" => {
-                let text_content = child.text().unwrap_or("").trim();
-                sections.extend(parse_text(text_content, &mut current_section_name));
+            if let Some(ref mut entry) = current_entry {
+                entry.names.push(system_name.clone());
             }
-            _ => {}
         }
+        b"text" => {
+            let text = reader.read_text(b"text", &mut Vec::new())?;
+            let sections = parse_text(&text);
+            if let Some(ref mut entry) = current_entry {
+                entry.sections = sections;
+            }
+        }
+        _ => (),
     }
 
-    ParsedEntry { names, sections }
+    Ok(())
 }
 
 /**
  * Parse the text content of an <entry> node and return a list of HistorySection objects.
  */
-fn parse_text(text: &str, current_section_name: &mut String) -> Vec<HistorySection> {
+fn parse_text(text: &str) -> Vec<HistorySection> {
+    let mut current_section_name = String::new();
     let mut sections = Vec::new();
     let document_sections = [
         "- DESCRIPTION -",
@@ -145,7 +170,7 @@ fn parse_text(text: &str, current_section_name: &mut String) -> Vec<HistorySecti
                 current_section_text.clear();
             }
 
-            *current_section_name = line.to_string().replace('-', "").trim().to_lowercase();
+            current_section_name = line.to_string().replace('-', "").trim().to_lowercase();
             order = get_section_order(line);
         } else {
             current_section_text.push_str(&(line.to_string() + "\n"));
@@ -209,7 +234,7 @@ pub fn count_total_elements(file_content: &str) -> Result<usize, Box<dyn Error>>
 }
 
 #[derive(Debug)]
-struct ParsedEntry {
+struct HistoryEntry {
     names: Vec<String>,
     sections: Vec<HistorySection>,
 }

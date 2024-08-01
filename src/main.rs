@@ -219,11 +219,9 @@ fn extract_files() -> Result<(), Box<dyn Error>> {
  * Read the extracted files.
  */
 fn read_files() -> Result<(), Box<dyn Error>> {
-
     let mut count = 0;
 
     for data_type in DATA_TYPES.iter() {
-
         count += 1;
 
         let extracted_folder = format!("{}{}", PATHS.extracted_path, data_type.name.to_lowercase());
@@ -254,12 +252,11 @@ fn read_files() -> Result<(), Box<dyn Error>> {
         }
     }
     let machines_guard = MACHINES.lock().unwrap();
-    if let Some(machine) = machines_guard.get("99bottles") {
-        let json_data =
-            to_string_pretty(&machine.name).expect("Failed to serialize machine to JSON");
-        println!("Machine found: Name: 99bottles, Data: {}", json_data);
+    if let Some(machine) = machines_guard.get("mk") {
+        let json_data = to_string_pretty(&machine).expect("Failed to serialize machine to JSON");
+        println!("Machine found: Name: mk, Data: {}", json_data);
     } else {
-        println!("Machine with name '99bottles' not found");
+        println!("Machine with name 'mk' not found");
     }
 
     Ok(())
