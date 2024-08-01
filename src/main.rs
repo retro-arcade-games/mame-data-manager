@@ -1,23 +1,25 @@
 mod data_types;
 mod helpers;
-mod readers;
 mod models;
+mod readers;
 
-use lazy_static::lazy_static;
-use models::Machine;
+use console::style;
 use data_types::DATA_TYPES;
+use dialoguer::{theme::ColorfulTheme, Select};
+use helpers::data_source_helper::get_data_source;
 use helpers::file_download_helper::download_file;
 use helpers::file_extractor_helper::extract_file;
-use helpers::data_source_helper::get_data_source;
-use dialoguer::{theme::ColorfulTheme, Select};
-use std::fs;
-use std::error::Error;
+use helpers::ui_helper::{
+    icons::*, print_step_message, println_step_message, show_splash_screen, show_title,
+};
+use lazy_static::lazy_static;
+use models::Machine;
+use serde_json::to_string_pretty;
 use std::collections::HashMap;
+use std::error::Error;
+use std::fs;
 use std::path::Path;
 use std::sync::{Arc, Mutex};
-use serde_json::to_string_pretty;
-use console::style;
-use helpers::ui_helper::{icons::{*}, print_step_message, println_step_message, show_splash_screen, show_title};
 
 struct Paths {
     data_path: &'static str,
@@ -33,7 +35,8 @@ const PATHS: Paths = Paths {
 
 lazy_static! {
     static ref URL_MAP: Mutex<HashMap<String, String>> = Mutex::new(HashMap::new());
-    static ref MACHINES: Arc<Mutex<HashMap<String, Machine>>> = Arc::new(Mutex::new(HashMap::new()));
+    static ref MACHINES: Arc<Mutex<HashMap<String, Machine>>> =
+        Arc::new(Mutex::new(HashMap::new()));
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
@@ -62,11 +65,9 @@ fn set_url_in_map(name: &str, url: &str) {
  * Show the main menu.
  */
 fn show_menu() -> Result<(), Box<dyn Error>> {
-
     show_splash_screen();
 
     loop {
-
         show_title();
 
         let selections = &["Download files", "Extract files", "Read files", "Exit"];
@@ -121,41 +122,32 @@ fn download_files() -> Result<(), Box<dyn Error>> {
     let mut count = 0;
 
     for data_type in DATA_TYPES.iter() {
-        
         count += 1;
 
         let message = format!("Getting URL for {}...", data_type.name);
         println_step_message(&message, count, DATA_TYPES.len(), DOWNLOAD);
 
         if let Ok(source_url) = get_data_source(data_type.source, data_type.source_match) {
-            
             set_url_in_map(data_type.name, &source_url);
 
             let file_name = get_file_name(&source_url);
             let file_path = format!("{}{}", PATHS.download_path, file_name);
 
             if !Path::new(&file_path).exists() {
-                
                 let message = format!("Downloading {}...", source_url);
                 print_step_message(&message, count, DATA_TYPES.len(), DOWNLOAD);
-                
+
                 download_file(&source_url, &file_path)?;
-                
+
                 let message = format!("{} downloaded successfully", style(file_name).cyan());
                 print_step_message(&message, count, DATA_TYPES.len(), SUCCESS);
-
             } else {
-
                 let message = format!("{} already exists (skipped)", style(file_name).cyan());
                 print_step_message(&message, count, DATA_TYPES.len(), INFO);
-
             }
         } else {
-
-            
             let message = format!("Failed getting matching source for {}", data_type.name);
             print_step_message(&message, count, DATA_TYPES.len(), ERROR);
-
         }
     }
 
@@ -169,7 +161,6 @@ fn extract_files() -> Result<(), Box<dyn Error>> {
     let mut count = 0;
 
     for data_type in DATA_TYPES.iter() {
-
         count += 1;
 
         let extracted_folder = format!("{}{}", PATHS.extracted_path, data_type.name.to_lowercase());
@@ -178,13 +169,14 @@ fn extract_files() -> Result<(), Box<dyn Error>> {
         println_step_message(&message, count, DATA_TYPES.len(), LOUPE);
 
         // Check if the file already exists in the extracted folder
-        if let Some(existing_file_path) = find_file_with_pattern(&extracted_folder, &data_type.file_name_pattern) {
-            
+        if let Some(existing_file_path) =
+            find_file_with_pattern(&extracted_folder, &data_type.file_name_pattern)
+        {
             let data_file = existing_file_path.split('/').last().unwrap();
 
             let message = format!("{} already exists (skipped)", style(data_file).cyan());
             print_step_message(&message, count, DATA_TYPES.len(), INFO);
-            
+
             continue;
         }
 
@@ -194,9 +186,8 @@ fn extract_files() -> Result<(), Box<dyn Error>> {
                 // Get the file name from the URL
                 let file_name = get_file_name(&url);
                 file_name
-            },
+            }
             None => {
-
                 let message = format!("URL for {} not found", data_type.name);
                 print_step_message(&message, count, DATA_TYPES.len(), ERROR);
 
@@ -209,7 +200,6 @@ fn extract_files() -> Result<(), Box<dyn Error>> {
 
         // Check if the file exists
         if Path::new(&file_path).exists() {
-
             let message = format!("Extracting {} to {}", file_path, extracted_folder);
             print_step_message(&message, count, DATA_TYPES.len(), FOLDER);
 
@@ -217,14 +207,10 @@ fn extract_files() -> Result<(), Box<dyn Error>> {
 
             let message = format!("{} extracted successfully", style(file_name).cyan());
             print_step_message(&message, count, DATA_TYPES.len(), SUCCESS);
-
         } else {
-
             let message = format!("File for {} not found", data_type.name);
             print_step_message(&message, count, DATA_TYPES.len(), ERROR);
-
         }
-        
     }
     Ok(())
 }
@@ -236,7 +222,6 @@ fn read_files() -> Result<(), Box<dyn Error>> {
     let mut count = 0;
 
     for data_type in DATA_TYPES.iter() {
-
         count += 1;
 
         let extracted_folder = format!("{}{}", PATHS.extracted_path, data_type.name.to_lowercase());
@@ -244,9 +229,10 @@ fn read_files() -> Result<(), Box<dyn Error>> {
         let message = format!("Checking if {} file exists...", data_type.name);
         println_step_message(&message, count, DATA_TYPES.len(), LOUPE);
 
-        if let Some(data_file_path) = find_file_with_pattern(&extracted_folder, &data_type.file_name_pattern) {
+        if let Some(data_file_path) =
+            find_file_with_pattern(&extracted_folder, &data_type.file_name_pattern)
+        {
             {
-
                 let data_file = data_file_path.split('/').last().unwrap();
 
                 let message = format!("Reading {}...", style(data_file).cyan());
@@ -255,20 +241,18 @@ fn read_files() -> Result<(), Box<dyn Error>> {
                 let mut machines_guard = MACHINES.lock().unwrap();
                 let _ = (data_type.read_function)(&data_file_path, &mut machines_guard);
 
-                 let message = format!("{} loaded successfully", style(data_file).cyan());
+                let message = format!("{} loaded successfully", style(data_file).cyan());
                 print_step_message(&message, count, DATA_TYPES.len(), SUCCESS);
-
             }
         } else {
-            
             let message = format!("File for {} not found", data_type.name);
             print_step_message(&message, count, DATA_TYPES.len(), ERROR);
-
         }
     }
     let machines_guard = MACHINES.lock().unwrap();
     if let Some(machine) = machines_guard.get("mk") {
-        let json_data = to_string_pretty(&machine.name).expect("Failed to serialize machine to JSON");
+        let json_data =
+            to_string_pretty(&machine.name).expect("Failed to serialize machine to JSON");
         println!("Machine found: Name: mk, Data: {}", json_data);
     } else {
         println!("Machine with name 'mk' not found");
@@ -281,7 +265,10 @@ fn read_files() -> Result<(), Box<dyn Error>> {
  * Find a file with the given pattern in the given folder.
  */
 fn find_file_with_pattern(folder: &str, pattern: &regex::Regex) -> Option<String> {
-    for entry in walkdir::WalkDir::new(folder).into_iter().filter_map(|e| e.ok()) {
+    for entry in walkdir::WalkDir::new(folder)
+        .into_iter()
+        .filter_map(|e| e.ok())
+    {
         let path = entry.path();
         if path.is_file() {
             if let Some(file_name) = path.file_name().and_then(|name| name.to_str()) {

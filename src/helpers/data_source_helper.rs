@@ -11,11 +11,11 @@ pub fn get_data_source(url: &str, matching: &str) -> Result<String, Box<dyn Erro
     let client = Client::new();
     let response = client.get(url).send()?;
     let body = response.text()?;
-    
+
     // Parse the HTML
     let document = Html::parse_document(&body);
     let selector = Selector::parse("a").unwrap();
-    
+
     // Find the matching source
     let mut source: Option<String> = None;
     for element in document.select(&selector) {
@@ -25,7 +25,7 @@ pub fn get_data_source(url: &str, matching: &str) -> Result<String, Box<dyn Erro
             }
         }
     }
-    
+
     // If a source was found, return it
     if let Some(mut source) = source {
         if !source.starts_with("http") {

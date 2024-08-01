@@ -1,9 +1,9 @@
 use indicatif::{ProgressBar, ProgressStyle};
+use sevenz_rust::decompress_file;
 use std::error::Error;
 use std::fs::File;
 use std::path::Path;
 use zip::read::ZipArchive;
-use sevenz_rust::decompress_file;
 
 /**
  * Extract the contents of the given archive file to the given destination folder.
@@ -23,15 +23,15 @@ pub fn extract_file(archive_path: &str, destination_folder: &str) -> Result<(), 
  * Extract the contents of a ZIP archive to the given destination folder.
  */
 fn extract_zip(archive_path: &str, destination_folder: &str) -> Result<(), Box<dyn Error>> {
-    
     let file = File::open(archive_path)?;
     let mut archive = ZipArchive::new(file)?;
 
-    
     let pb = ProgressBar::new(archive.len() as u64);
     pb.set_style(
         ProgressStyle::default_bar()
-            .template("{spinner:.green} [{elapsed_precise}] [{bar:40.cyan/blue}] {pos}/{len} ({eta})")
+            .template(
+                "{spinner:.green} [{elapsed_precise}] [{bar:40.cyan/blue}] {pos}/{len} ({eta})",
+            )
             .progress_chars("#>-"),
     );
 
@@ -63,7 +63,6 @@ fn extract_zip(archive_path: &str, destination_folder: &str) -> Result<(), Box<d
  * Extract the contents of a 7zip archive to the given destination folder.
  */
 fn extract_7zip(archive_path: &str, destination_folder: &str) -> Result<(), Box<dyn Error>> {
-    
     let pb = ProgressBar::new_spinner();
     pb.set_style(
         ProgressStyle::default_spinner()

@@ -1,14 +1,14 @@
-use crate::models::{Machine, BiosSet, Rom, DeviceRef, Software, Sample, Disk};
+use crate::models::{BiosSet, DeviceRef, Disk, Machine, Rom, Sample, Software};
 use indicatif::{ProgressBar, ProgressStyle};
+use quick_xml::events::Event;
+use quick_xml::Reader;
 use roxmltree::Document;
 use std::collections::HashMap;
 use std::error::Error;
 use std::fs;
-use quick_xml::events::Event;
-use quick_xml::Reader;
 
 /**
- * The `mame.dat` file format represents data about arcade machines and their components. 
+ * The `mame.dat` file format represents data about arcade machines and their components.
  * The following outlines the structure used for parsing this file:
  *
  * - `Machine`: Represents a single arcade machine with various attributes:
@@ -55,11 +55,13 @@ use quick_xml::Reader;
  *       - `region`: Optional region attribute (attribute).
  */
 
-
 /**
  * Read the contents of the given MAME XML file and populate the given HashMap with the machines.
  */
-pub fn read_mame_file(file_path: &str, machines: &mut HashMap<String, Machine>) -> Result<(), Box<dyn std::error::Error>> {
+pub fn read_mame_file(
+    file_path: &str,
+    machines: &mut HashMap<String, Machine>,
+) -> Result<(), Box<dyn std::error::Error>> {
     // Read the file content
     let file_content = fs::read_to_string(file_path)?;
 
@@ -76,7 +78,8 @@ pub fn read_mame_file(file_path: &str, machines: &mut HashMap<String, Machine>) 
     );
 
     // Parse XML document
-    let doc = Document::parse(&file_content).map_err(|e| Box::new(e) as Box<dyn std::error::Error>)?;
+    let doc =
+        Document::parse(&file_content).map_err(|e| Box::new(e) as Box<dyn std::error::Error>)?;
 
     // Process each node in the XML document
     for node in doc.descendants() {
@@ -240,7 +243,7 @@ fn parse_child_element(name: &str, node: &roxmltree::Node, machine: &mut Machine
         "disk" => {
             let disk = Disk {
                 name: node.attribute("name").unwrap_or("").to_string(),
-                sha1:node.attribute("sha1").map(|s| s.to_string()),
+                sha1: node.attribute("sha1").map(|s| s.to_string()),
                 merge: node.attribute("merge").map(|s| s.to_string()),
                 region: node.attribute("region").map(|s| s.to_string()),
                 status: node.attribute("status").map(|s| s.to_string()),

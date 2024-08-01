@@ -27,22 +27,15 @@ pub fn clear_console() {
 
 // function that receives a message, current step and total steps and an icon and prints a message to the console
 pub fn print_step_message(message: &str, step: usize, total_steps: usize, icon: Emoji) {
-
     clean_last_line().unwrap_or_default();
 
     println_step_message(message, step, total_steps, icon)
 }
 
 pub fn println_step_message(message: &str, step: usize, total_steps: usize, icon: Emoji) {
-
     let step = format!("[{}/{}]", step, total_steps);
 
-    println!(
-        "{} {} {}",
-        style(step).bold().dim(),
-        icon,
-        message,
-    );
+    println!("{} {} {}", style(step).bold().dim(), icon, message,);
 }
 
 pub fn show_splash_screen() {

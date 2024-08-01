@@ -1,4 +1,4 @@
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Machine {
@@ -60,7 +60,6 @@ pub struct Software {
 pub struct Sample {
     pub name: String,
 }
-
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Disk {

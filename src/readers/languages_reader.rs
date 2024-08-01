@@ -13,7 +13,7 @@ use std::io::{BufRead, BufReader};
  * - `[FOLDER_SETTINGS]`: A section for folder settings.
  *   - `RootFolderIcon`: Specifies the icon for the root folder.
  *   - `SubFolderIcon`: Specifies the icon for sub-folders.
- * 
+ *
  * - `[ROOT_FOLDER]`: A placeholder section for root folder configurations (may be empty).
  *
  * - `[<Language>]`: Sections where each section header is a language identifier.
@@ -22,11 +22,13 @@ use std::io::{BufRead, BufReader};
  * Note: Sections are labeled by language names, and the entries under each section are ROM names associated with that language.
  */
 
-
 /**
  * Read the contents of the given languages file and populate the given HashMap with the languages.
  */
-pub fn read_languages_file(file_path: &str, machines: &mut HashMap<String, Machine>) -> Result<(), Box<dyn Error>> {
+pub fn read_languages_file(
+    file_path: &str,
+    machines: &mut HashMap<String, Machine>,
+) -> Result<(), Box<dyn Error>> {
     // Count the total number of elements for the progress bar
     let total_elements = count_total_elements(file_path)?;
     let pb = ProgressBar::new(total_elements as u64);
@@ -49,7 +51,9 @@ pub fn read_languages_file(file_path: &str, machines: &mut HashMap<String, Machi
         let line = line?;
         let first_char = line.chars().next().unwrap_or(' ');
 
-        if !to_ignore.contains(&first_char.to_string().as_str()) && !to_ignore.contains(&line.as_str()) {
+        if !to_ignore.contains(&first_char.to_string().as_str())
+            && !to_ignore.contains(&line.as_str())
+        {
             if first_char == '[' {
                 // Set the current language when a new language section starts
                 current_language = Some(line.replace("[", "").replace("]", ""));
@@ -73,24 +77,26 @@ pub fn read_languages_file(file_path: &str, machines: &mut HashMap<String, Machi
 fn count_total_elements(file_path: &str) -> Result<usize, Box<dyn std::error::Error>> {
     let to_ignore = vec![
         ";",
-		"",
-		" ",
-		"",
-		"[FOLDER_SETTINGS]",
-		"[ROOT_FOLDER]",
-		"[",
-		"RootFolderIcon mame",
-		"SubFolderIcon folder",
+        "",
+        " ",
+        "",
+        "[FOLDER_SETTINGS]",
+        "[ROOT_FOLDER]",
+        "[",
+        "RootFolderIcon mame",
+        "SubFolderIcon folder",
     ];
 
     let file = File::open(file_path)?;
     let reader = BufReader::new(file);
 
-    let count = reader.lines()
+    let count = reader
+        .lines()
         .filter_map(|line| line.ok())
         .filter(|line| {
             let first_char = line.chars().next().unwrap_or(' ');
-            !to_ignore.contains(&line.as_str()) && !to_ignore.contains(&first_char.to_string().as_str())
+            !to_ignore.contains(&line.as_str())
+                && !to_ignore.contains(&first_char.to_string().as_str())
         })
         .count();
 

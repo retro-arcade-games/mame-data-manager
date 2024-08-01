@@ -1,12 +1,12 @@
+use crate::models::{HistorySection, Machine};
+use indicatif::{ProgressBar, ProgressStyle};
+use quick_xml::events::Event;
+use quick_xml::Reader;
+use roxmltree::Document;
 use std::collections::HashMap;
 use std::error::Error;
 use std::fs::File;
 use std::io::{BufReader, Read};
-use indicatif::{ProgressBar, ProgressStyle};
-use roxmltree::Document;
-use quick_xml::Reader;
-use quick_xml::events::Event;
-use crate::models::{HistorySection, Machine};
 
 /**
  * The XML file follows this general structure:
@@ -42,7 +42,10 @@ use crate::models::{HistorySection, Machine};
 /**
  * Read the contents of the given history XML file and populate the given HashMap with the machines.
  */
-pub fn read_history_file(file_path: &str, machines: &mut HashMap<String, Machine>) -> Result<(), Box<dyn Error>> {
+pub fn read_history_file(
+    file_path: &str,
+    machines: &mut HashMap<String, Machine>,
+) -> Result<(), Box<dyn Error>> {
     // Read the entire file content into a string
     let file = File::open(file_path)?;
     let mut reader = BufReader::new(file);
@@ -130,7 +133,7 @@ fn parse_text(text: &str, current_section_name: &mut String) -> Vec<HistorySecti
         "- SERIES -",
         "- STAFF -",
         "- PORTS -",
-        "- CONTRIBUTE -"
+        "- CONTRIBUTE -",
     ];
 
     let mut current_section_text = String::new();

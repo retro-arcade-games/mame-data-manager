@@ -1,9 +1,9 @@
+use crate::models::Machine;
+use indicatif::{ProgressBar, ProgressStyle};
 use std::collections::HashMap;
+use std::error::Error;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
-use std::error::Error;
-use indicatif::{ProgressBar, ProgressStyle};
-use crate::models::Machine;
 
 /**
  * The `series.ini` file format represents configurations and data related to different game series in the system.
@@ -13,7 +13,7 @@ use crate::models::Machine;
  * - `[FOLDER_SETTINGS]`: A section for folder settings.
  *   - `RootFolderIcon`: Specifies the icon for the root folder.
  *   - `SubFolderIcon`: Specifies the icon for sub-folders.
- * 
+ *
  * - `[ROOT_FOLDER]`: A placeholder section for root folder configurations (may be empty).
  *
  * - `[<Series>]`: Sections where each section header is a game series identifier.
@@ -22,11 +22,13 @@ use crate::models::Machine;
  * Note: Sections are labeled by series names, and the entries under each section are ROM names associated with that series.
  */
 
-
 /**
  * Read the contents of the given series file and populate the given HashMap with the series.
  */
-pub fn read_series_file(file_path: &str, machines: &mut HashMap<String, Machine>) -> Result<(), Box<dyn Error>> {
+pub fn read_series_file(
+    file_path: &str,
+    machines: &mut HashMap<String, Machine>,
+) -> Result<(), Box<dyn Error>> {
     let total_elements = count_total_elements(file_path)?;
     let pb = ProgressBar::new(total_elements as u64);
     pb.set_style(
@@ -35,9 +37,7 @@ pub fn read_series_file(file_path: &str, machines: &mut HashMap<String, Machine>
             .progress_chars("#>-"),
     );
 
-    let to_ignore = [
-        ";", "", " ", "", "[FOLDER_SETTINGS]", "[ROOT_FOLDER]"
-    ];
+    let to_ignore = [";", "", " ", "", "[FOLDER_SETTINGS]", "[ROOT_FOLDER]"];
 
     let file = File::open(file_path)?;
     let reader = BufReader::new(file);
@@ -48,8 +48,10 @@ pub fn read_series_file(file_path: &str, machines: &mut HashMap<String, Machine>
         let line = line?;
 
         let first_char = line.chars().next().unwrap_or(' ');
-        
-        if !to_ignore.contains(&line.as_str()) && !to_ignore.contains(&first_char.to_string().as_str()) {
+
+        if !to_ignore.contains(&line.as_str())
+            && !to_ignore.contains(&first_char.to_string().as_str())
+        {
             if first_char == '[' {
                 current_series = Some(line.trim_matches(|c| c == '[' || c == ']').to_string());
             } else if let Some(series) = &current_series {
@@ -70,23 +72,27 @@ pub fn read_series_file(file_path: &str, machines: &mut HashMap<String, Machine>
  */
 fn count_total_elements(file_path: &str) -> Result<usize, Box<dyn Error>> {
     let to_ignore = [
-		";",
-		"",
-		" ",
-		"",
-		"[FOLDER_SETTINGS]",
-		"[ROOT_FOLDER]",
-		"[",
-		"RootFolderIcon mame",
-		"SubFolderIcon folder",
+        ";",
+        "",
+        " ",
+        "",
+        "[FOLDER_SETTINGS]",
+        "[ROOT_FOLDER]",
+        "[",
+        "RootFolderIcon mame",
+        "SubFolderIcon folder",
     ];
 
     let file = File::open(file_path)?;
     let reader = BufReader::new(file);
 
-    let count = reader.lines()
+    let count = reader
+        .lines()
         .filter_map(Result::ok)
-        .filter(|line| !to_ignore.contains(&line.as_str()) && !to_ignore.contains(&line.get(0..1).unwrap_or("")))
+        .filter(|line| {
+            !to_ignore.contains(&line.as_str())
+                && !to_ignore.contains(&line.get(0..1).unwrap_or(""))
+        })
         .count();
 
     Ok(count)

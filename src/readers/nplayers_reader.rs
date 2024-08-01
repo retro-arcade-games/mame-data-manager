@@ -1,23 +1,23 @@
+use crate::models::Machine;
+use indicatif::{ProgressBar, ProgressStyle};
 use std::collections::HashMap;
+use std::error::Error;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
-use std::error::Error;
-use indicatif::{ProgressBar, ProgressStyle};
-use crate::models::Machine;
 
 /**
  * The `nplayers.ini` file format represents configurations related to the number of players and game types for various ROMs.
  * The file is organized into a single section `[NPlayers]`, where each entry corresponds to a specific ROM and its associated player count or game type.
  * Each line follows the format:
- * 
+ *
  * - `ROM_Name=Player_Count_Or_Game_Type`
- * 
+ *
  * Where:
  * - `ROM_Name`: The name of the ROM file.
  * - `Player_Count_Or_Game_Type`: Describes the number of players or the type of game associated with the ROM.
- * 
+ *
  * Possible values for `Player_Count_Or_Game_Type` include:
- * 
+ *
  * - `1P`: Single-player game.
  * - `2P alt`: Alternate two-player mode.
  * - `2P sim`: Simultaneous two-player mode.
@@ -38,14 +38,17 @@ use crate::models::Machine;
  * - `Device`: Non-playable device.
  * - `Non-arcade`: Non-arcade game.
  * - `???`: Unknown or unspecified number of players.
- * 
+ *
  * Lines that start with `[` or `;`, or are empty, are considered comments or section headers and are ignored.
  */
 
 /**
  * Read the nplayers.ini file and update the machines with the number of players
  */
-pub fn read_nplayers_file(file_path: &str, machines: &mut HashMap<String, Machine>) -> Result<(), Box<dyn Error>>{
+pub fn read_nplayers_file(
+    file_path: &str,
+    machines: &mut HashMap<String, Machine>,
+) -> Result<(), Box<dyn Error>> {
     let total_elements = count_total_elements(file_path)?;
     let pb = ProgressBar::new(total_elements as u64);
     pb.set_style(

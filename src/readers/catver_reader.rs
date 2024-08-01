@@ -1,9 +1,9 @@
+use crate::models::Machine;
+use indicatif::{ProgressBar, ProgressStyle};
 use std::collections::HashMap;
+use std::error::Error;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
-use std::error::Error;
-use indicatif::{ProgressBar, ProgressStyle};
-use crate::models::Machine;
 
 /**
  * The `catver.ini` file represents configurations and data related to game classification in the MAME system.
@@ -14,7 +14,7 @@ use crate::models::Machine;
  * - `[FOLDER_SETTINGS]`: An optional section for folder settings.
  *   - `RootFolderIcon`: Specifies the icon for the root folder.
  *   - `SubFolderIcon`: Specifies the icon for sub-folders.
- * 
+ *
  * - `[ROOT_FOLDER]`: A placeholder section for root folder configurations (may be empty).
  *
  * - `<ROM Name>=<Genre> / <Subgenre> * Mature *`
@@ -25,11 +25,13 @@ use crate::models::Machine;
  * Note: The `genre` and `subgenre` are separated by ` / `, and the subgenre may or may not end with the `* Mature *` marker.
  */
 
-
 /**
  * Read the catver.ini file and update the machines with the genre, subgenre, and is_mature values.
  */
-pub fn read_catver_file(file_path: &str, machines: &mut HashMap<String, Machine>) -> Result<(), Box<dyn Error>>{
+pub fn read_catver_file(
+    file_path: &str,
+    machines: &mut HashMap<String, Machine>,
+) -> Result<(), Box<dyn Error>> {
     let total_elements = count_total_elements(file_path)?;
     let pb = ProgressBar::new(total_elements as u64);
     pb.set_style(

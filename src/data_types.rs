@@ -1,8 +1,14 @@
 use std::collections::HashMap;
-use regex::Regex;
-use lazy_static::lazy_static;
 
-use crate::{models::Machine, readers::{catver_reader::read_catver_file, history_reader::read_history_file, languages_reader::read_languages_file, mame_reader::read_mame_file, nplayers_reader::read_nplayers_file, series_reader::read_series_file}};
+use lazy_static::lazy_static;
+use regex::Regex;
+
+use crate::models::Machine;
+use crate::readers::{
+    catver_reader::read_catver_file, history_reader::read_history_file,
+    languages_reader::read_languages_file, mame_reader::read_mame_file,
+    nplayers_reader::read_nplayers_file, series_reader::read_series_file,
+};
 
 /**
  * Represents a data type that can be read by the application.
@@ -12,9 +18,9 @@ pub struct DataType {
     pub source: &'static str,
     pub source_match: &'static str,
     pub file_name_pattern: Regex,
-    pub read_function: fn(&str, &mut HashMap<String, Machine>) -> Result<(), Box<dyn std::error::Error>>,
+    pub read_function:
+        fn(&str, &mut HashMap<String, Machine>) -> Result<(), Box<dyn std::error::Error>>,
 }
-
 
 lazy_static! {
     /**
