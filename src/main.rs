@@ -4,6 +4,7 @@ mod helpers;
 
 use console::style;
 use dialoguer::{theme::ColorfulTheme, Select};
+use helpers::fs_helper::{find_file_with_pattern, get_file_name, PATHS};
 
 use core::models::Machine;
 use helpers::data_source_helper::get_data_source;
@@ -20,18 +21,6 @@ use std::error::Error;
 use std::fs;
 use std::path::Path;
 use std::sync::{Arc, Mutex};
-
-struct Paths {
-    data_path: &'static str,
-    download_path: &'static str,
-    extracted_path: &'static str,
-}
-
-const PATHS: Paths = Paths {
-    data_path: "data/",
-    download_path: "data/downloads/",
-    extracted_path: "data/extracted/",
-};
 
 lazy_static! {
     static ref URL_MAP: Mutex<HashMap<String, String>> = Mutex::new(HashMap::new());
@@ -260,34 +249,4 @@ fn read_files() -> Result<(), Box<dyn Error>> {
     }
 
     Ok(())
-}
-
-/**
- * Find a file with the given pattern in the given folder.
- */
-fn find_file_with_pattern(folder: &str, pattern: &regex::Regex) -> Option<String> {
-    for entry in walkdir::WalkDir::new(folder)
-        .into_iter()
-        .filter_map(|e| e.ok())
-    {
-        let path = entry.path();
-        if path.is_file() {
-            if let Some(file_name) = path.file_name().and_then(|name| name.to_str()) {
-                if pattern.is_match(file_name) {
-                    // return Some(path.to_path_buf());
-                    return Some(path.to_string_lossy().into_owned());
-                }
-            }
-        }
-    }
-    None
-}
-
-/**
- * Get the file name from the given URL.
- */
-fn get_file_name(url: &str) -> String {
-    let last_param = url.split('/').last().unwrap_or("");
-    let file_name = last_param.split('=').last().unwrap_or("");
-    file_name.to_string()
 }
