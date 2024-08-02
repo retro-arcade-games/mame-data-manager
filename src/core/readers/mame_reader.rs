@@ -1,5 +1,5 @@
-use crate::helpers::ui_helper::init_progress_bar;
 use crate::core::models::{BiosSet, DeviceRef, Disk, Machine, Rom, Sample, Software};
+use crate::helpers::ui_helper::init_progress_bar;
 use quick_xml::events::Event;
 use quick_xml::Reader;
 use std::collections::HashMap;

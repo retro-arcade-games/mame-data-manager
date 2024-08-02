@@ -1,3 +1,7 @@
+use std::{error::Error, fs, path::Path};
+
+use crate::core::data_types::DATA_TYPES;
+
 pub struct Paths {
     pub data_path: &'static str,
     pub download_path: &'static str,
@@ -38,4 +42,26 @@ pub fn get_file_name(url: &str) -> String {
     let last_param = url.split('/').last().unwrap_or("");
     let file_name = last_param.split('=').last().unwrap_or("");
     file_name.to_string()
+}
+
+/**
+ * Check if the required folder structure exists and create it if it doesn't.
+ */
+pub fn check_folder_structure() -> Result<(), Box<dyn Error>> {
+    let paths = [PATHS.data_path, PATHS.download_path, PATHS.extracted_path];
+
+    for path in paths.iter() {
+        if !Path::new(path).exists() {
+            fs::create_dir_all(path)?;
+        }
+    }
+
+    for data_type in DATA_TYPES.iter() {
+        let subfolder = format!("{}/{}", PATHS.extracted_path, data_type.name.to_lowercase());
+        if !Path::new(&subfolder).exists() {
+            fs::create_dir_all(&subfolder)?;
+        }
+    }
+
+    Ok(())
 }
