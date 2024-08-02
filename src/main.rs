@@ -1,11 +1,11 @@
-mod data_types;
+
+mod core;
 mod helpers;
-mod models;
-mod readers;
 
 use console::style;
-use data_types::DATA_TYPES;
 use dialoguer::{theme::ColorfulTheme, Select};
+
+use core::models::Machine;
 use helpers::data_source_helper::get_data_source;
 use helpers::file_download_helper::download_file;
 use helpers::file_extractor_helper::extract_file;
@@ -13,8 +13,8 @@ use helpers::ui_helper::{
     icons::*, print_step_message, println_step_message, show_splash_screen, show_title,
 };
 use lazy_static::lazy_static;
-use models::Machine;
 use serde_json::to_string_pretty;
+use core::data_types::DATA_TYPES;
 use std::collections::HashMap;
 use std::error::Error;
 use std::fs;

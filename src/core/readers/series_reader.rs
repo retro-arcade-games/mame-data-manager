@@ -1,5 +1,5 @@
 use crate::helpers::ui_helper::init_progress_bar;
-use crate::models::Machine;
+use crate::core::models::Machine;
 use std::collections::HashMap;
 use std::error::Error;
 use std::fs::File;

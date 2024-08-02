@@ -3,8 +3,8 @@ use std::collections::HashMap;
 use lazy_static::lazy_static;
 use regex::Regex;
 
-use crate::models::Machine;
-use crate::readers::{
+use crate::core::models::Machine;
+use crate::core::readers::{
     catver_reader::read_catver_file, history_reader::read_history_file,
     languages_reader::read_languages_file, mame_reader::read_mame_file,
     nplayers_reader::read_nplayers_file, series_reader::read_series_file,
