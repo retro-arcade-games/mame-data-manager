@@ -4,6 +4,7 @@ mod helpers;
 use console::style;
 use dialoguer::{theme::ColorfulTheme, Select};
 use helpers::fs_helper::{check_folder_structure, find_file_with_pattern, get_file_name, PATHS};
+use num_format::{Locale, ToFormattedString};
 
 use core::data_types::{DataType, DATA_TYPES};
 use core::models::Machine;
@@ -15,10 +16,13 @@ use helpers::ui_helper::{
 };
 use lazy_static::lazy_static;
 use serde_json::to_string_pretty;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::error::Error;
 use std::path::Path;
 use std::sync::{Arc, Mutex};
+
+#[macro_use] extern crate prettytable;
+use prettytable::{Table, Row, Cell};
 
 lazy_static! {
     static ref MACHINES: Arc<Mutex<HashMap<String, Machine>>> =
@@ -40,7 +44,7 @@ fn show_menu() -> Result<(), Box<dyn Error>> {
     loop {
         show_title();
 
-        let selections = &["Download files", "Extract files", "Read files", "Exit"];
+        let selections = &["Download files", "Extract files", "Read files", "View stats", "Exit"];
         let selection = Select::with_theme(&ColorfulTheme::default())
             .with_prompt("Choose an option")
             .default(0)
@@ -52,7 +56,8 @@ fn show_menu() -> Result<(), Box<dyn Error>> {
             0 => download_files()?,
             1 => extract_files()?,
             2 => read_files()?,
-            3 => {
+            3 => show_stats()?,
+            4 => {
                 println!("Exiting...");
                 break;
             }
@@ -222,6 +227,43 @@ fn read_files() -> Result<(), Box<dyn Error>> {
     } else {
         println!("Machine with name 'mk' not found");
     }
+
+    Ok(())
+}
+
+/**
+ * Show the statistics.
+ */
+fn show_stats() -> Result<(), Box<dyn Error>> {
+    let machines_guard = MACHINES.lock().unwrap();
+    let machines = machines_guard.values().collect::<Vec<&Machine>>();
+
+    let total_machines = machines.len();
+    let total_clones = machines.iter().filter(|m| m.clone_of.is_some()).count();
+    let total_originals = total_machines - total_clones;
+    let unique_manufacturers: HashSet<_> = machines.iter().map(|m| &m.manufacturer).collect();
+    let total_manufacturers = unique_manufacturers.len();
+    let unique_series: HashSet<_> = machines.iter().map(|m| &m.series).collect();
+    let total_series = unique_series.len();
+    let unique_genres = machines.iter().map(|m| &m.genre).collect::<HashSet<_>>();
+    let total_genres = unique_genres.len();
+    let total_machines_with_history = machines.iter().filter(|m| m.history_sections.len() > 0).count();
+
+    let mut table = Table::new();
+    table.set_titles(Row::new(vec![
+        Cell::new("MAME information statistics").style_spec("H2cFg"),
+    ]));
+
+    table.add_row(row![b -> "Information", "Amount"]);
+    table.add_row(row!["Machines", r -> total_machines.to_formatted_string(&Locale::en)]);
+    table.add_row(row!["Originals", r -> total_originals.to_formatted_string(&Locale::en)]);
+    table.add_row(row!["Clones", r -> total_clones.to_formatted_string(&Locale::en)]);
+    table.add_row(row!["Manufacturers", r -> total_manufacturers.to_formatted_string(&Locale::en)]);
+    table.add_row(row!["Series", r -> total_series.to_formatted_string(&Locale::en)]);
+    table.add_row(row!["Genres", r -> total_genres.to_formatted_string(&Locale::en)]);
+    table.add_row(row!["Machines with history", r -> total_machines_with_history.to_formatted_string(&Locale::en)]);
+
+    table.printstd();
 
     Ok(())
 }
