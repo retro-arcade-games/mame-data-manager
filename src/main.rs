@@ -5,7 +5,7 @@ use console::style;
 use dialoguer::{theme::ColorfulTheme, Select};
 use helpers::fs_helper::{check_folder_structure, find_file_with_pattern, get_file_name, PATHS};
 
-use core::data_types::DATA_TYPES;
+use core::data_types::{DataType, DATA_TYPES};
 use core::models::Machine;
 use helpers::data_source_helper::get_data_source;
 use helpers::file_download_helper::download_file;
@@ -71,32 +71,40 @@ fn download_files() -> Result<(), Box<dyn Error>> {
 
     for data_type in DATA_TYPES.iter() {
         count += 1;
-
-        let message = format!("Getting URL for {}...", data_type.name);
-        println_step_message(&message, count, DATA_TYPES.len(), DOWNLOAD);
-
-        if let Ok(source_url) = get_data_source(data_type.source, data_type.source_match) {
-            let file_name = get_file_name(&source_url);
-            let file_path = format!("{}{}", PATHS.download_path, file_name);
-
-            if !Path::new(&file_path).exists() {
-                let message = format!("Downloading {}...", source_url);
-                print_step_message(&message, count, DATA_TYPES.len(), DOWNLOAD);
-
-                download_file(&source_url, &file_path)?;
-
-                let message = format!("{} downloaded successfully", style(file_name).cyan());
-                print_step_message(&message, count, DATA_TYPES.len(), SUCCESS);
-            } else {
-                let message = format!("{} already exists (skipped)", style(file_name).cyan());
-                print_step_message(&message, count, DATA_TYPES.len(), INFO);
-            }
-        } else {
-            let message = format!("Failed getting matching source for {}", data_type.name);
-            print_step_message(&message, count, DATA_TYPES.len(), ERROR);
-        }
+        download_data_file(data_type, count)?;
+        println!("")
     }
 
+    Ok(())
+}
+
+/**
+ * Download the data file.
+ */
+fn download_data_file(data_type: &DataType, count: usize) -> Result<(), Box<dyn Error>> {
+    let message = format!("Getting URL for {}...", data_type.name);
+    print_step_message(&message, count, DATA_TYPES.len(), DOWNLOAD);
+
+    if let Ok(source_url) = get_data_source(data_type.source, data_type.source_match) {
+        let file_name = get_file_name(&source_url);
+        let file_path = format!("{}{}", PATHS.download_path, file_name);
+
+        if !Path::new(&file_path).exists() {
+            let message = format!("Downloading {}...", source_url);
+            print_step_message(&message, count, DATA_TYPES.len(), DOWNLOAD);
+
+            download_file(&source_url, &file_path)?;
+
+            let message = format!("{} downloaded successfully", style(file_name).cyan());
+            print_step_message(&message, count, DATA_TYPES.len(), SUCCESS);
+        } else {
+            let message = format!("{} already exists (skipped)", style(file_name).cyan());
+            print_step_message(&message, count, DATA_TYPES.len(), INFO);
+        }
+    } else {
+        let message = format!("Failed getting matching source for {}", data_type.name);
+        print_step_message(&message, count, DATA_TYPES.len(), ERROR);
+    }
     Ok(())
 }
 
@@ -126,30 +134,37 @@ fn extract_files() -> Result<(), Box<dyn Error>> {
             continue;
         }
 
-        // Check if the zip file exists in the downloads folder
-        let file_name =
-            match find_file_with_pattern(&PATHS.download_path, &data_type.zip_file_pattern) {
-                Some(path) => {
-                    let file_name = path.split('/').last().unwrap().to_owned();
-                    file_name
-                }
-                None => {
-                    let message = format!(
-                        "Zip file for {} not found, please download first",
-                        data_type.name
-                    );
-                    print_step_message(&message, count, DATA_TYPES.len(), ERROR);
+        let mut continue_extraction = false;
+        let mut file_name: Option<String> = None;
 
-                    continue;
-                }
-            };
+        // If zip file is not present then download it and extract it
+        while !continue_extraction {
+            file_name =
+                match find_file_with_pattern(&PATHS.download_path, &data_type.zip_file_pattern) {
+                    Some(path) => {
+                        let file_name = path.split('/').last().unwrap().to_owned();
+                        continue_extraction = true;
+                        Some(file_name)
+                    }
+                    None => {
+                        download_data_file(data_type, count)?;
+                        None
+                    }
+                };
+        }
+
+        let file_name = file_name.unwrap();
 
         // Get the file path
         let file_path = format!("{}{}", PATHS.download_path, file_name);
 
         // Check if the file exists
         if Path::new(&file_path).exists() {
-            let message = format!("Extracting {} to {}", file_path, extracted_folder);
+            let message = format!(
+                "Extracting {} to {}",
+                style(file_name.clone()).cyan(),
+                extracted_folder
+            );
             print_step_message(&message, count, DATA_TYPES.len(), FOLDER);
 
             extract_file(&file_path, &extracted_folder)?;
