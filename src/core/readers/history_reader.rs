@@ -1,5 +1,5 @@
+use crate::core::models::{HistorySection, Machine};
 use crate::helpers::ui_helper::init_progress_bar;
-use crate::models::{HistorySection, Machine};
 use quick_xml::events::Event;
 use quick_xml::Reader;
 use std::collections::HashMap;

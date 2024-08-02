@@ -1,11 +1,12 @@
-mod data_types;
+mod core;
 mod helpers;
-mod models;
-mod readers;
 
 use console::style;
-use data_types::DATA_TYPES;
 use dialoguer::{theme::ColorfulTheme, Select};
+use helpers::fs_helper::{check_folder_structure, find_file_with_pattern, get_file_name, PATHS};
+
+use core::data_types::{DataType, DATA_TYPES};
+use core::models::Machine;
 use helpers::data_source_helper::get_data_source;
 use helpers::file_download_helper::download_file;
 use helpers::file_extractor_helper::extract_file;
@@ -13,28 +14,13 @@ use helpers::ui_helper::{
     icons::*, print_step_message, println_step_message, show_splash_screen, show_title,
 };
 use lazy_static::lazy_static;
-use models::Machine;
 use serde_json::to_string_pretty;
 use std::collections::HashMap;
 use std::error::Error;
-use std::fs;
 use std::path::Path;
 use std::sync::{Arc, Mutex};
 
-struct Paths {
-    data_path: &'static str,
-    download_path: &'static str,
-    extracted_path: &'static str,
-}
-
-const PATHS: Paths = Paths {
-    data_path: "data/",
-    download_path: "data/downloads/",
-    extracted_path: "data/extracted/",
-};
-
 lazy_static! {
-    static ref URL_MAP: Mutex<HashMap<String, String>> = Mutex::new(HashMap::new());
     static ref MACHINES: Arc<Mutex<HashMap<String, Machine>>> =
         Arc::new(Mutex::new(HashMap::new()));
 }
@@ -43,22 +29,6 @@ fn main() -> Result<(), Box<dyn Error>> {
     check_folder_structure()?;
     show_menu()?;
     Ok(())
-}
-
-/**
- * Get the URL from the URL map.
- */
-fn get_url_from_map(name: &str) -> Option<String> {
-    let map = URL_MAP.lock().unwrap();
-    map.get(name).cloned()
-}
-
-/**
- * Set the URL in the URL map.
- */
-fn set_url_in_map(name: &str, url: &str) {
-    let mut map = URL_MAP.lock().unwrap();
-    map.insert(name.to_string(), url.to_string());
 }
 
 /**
@@ -94,28 +64,6 @@ fn show_menu() -> Result<(), Box<dyn Error>> {
 }
 
 /**
- * Check if the required folder structure exists and create it if it doesn't.
- */
-fn check_folder_structure() -> Result<(), Box<dyn Error>> {
-    let paths = [PATHS.data_path, PATHS.download_path, PATHS.extracted_path];
-
-    for path in paths.iter() {
-        if !Path::new(path).exists() {
-            fs::create_dir_all(path)?;
-        }
-    }
-
-    for data_type in DATA_TYPES.iter() {
-        let subfolder = format!("{}/{}", PATHS.extracted_path, data_type.name.to_lowercase());
-        if !Path::new(&subfolder).exists() {
-            fs::create_dir_all(&subfolder)?;
-        }
-    }
-
-    Ok(())
-}
-
-/**
  * Download the files from the data sources.
  */
 fn download_files() -> Result<(), Box<dyn Error>> {
@@ -123,34 +71,40 @@ fn download_files() -> Result<(), Box<dyn Error>> {
 
     for data_type in DATA_TYPES.iter() {
         count += 1;
-
-        let message = format!("Getting URL for {}...", data_type.name);
-        println_step_message(&message, count, DATA_TYPES.len(), DOWNLOAD);
-
-        if let Ok(source_url) = get_data_source(data_type.source, data_type.source_match) {
-            set_url_in_map(data_type.name, &source_url);
-
-            let file_name = get_file_name(&source_url);
-            let file_path = format!("{}{}", PATHS.download_path, file_name);
-
-            if !Path::new(&file_path).exists() {
-                let message = format!("Downloading {}...", source_url);
-                print_step_message(&message, count, DATA_TYPES.len(), DOWNLOAD);
-
-                download_file(&source_url, &file_path)?;
-
-                let message = format!("{} downloaded successfully", style(file_name).cyan());
-                print_step_message(&message, count, DATA_TYPES.len(), SUCCESS);
-            } else {
-                let message = format!("{} already exists (skipped)", style(file_name).cyan());
-                print_step_message(&message, count, DATA_TYPES.len(), INFO);
-            }
-        } else {
-            let message = format!("Failed getting matching source for {}", data_type.name);
-            print_step_message(&message, count, DATA_TYPES.len(), ERROR);
-        }
+        download_data_file(data_type, count)?;
+        println!("")
     }
 
+    Ok(())
+}
+
+/**
+ * Download the data file.
+ */
+fn download_data_file(data_type: &DataType, count: usize) -> Result<(), Box<dyn Error>> {
+    let message = format!("Getting URL for {}...", data_type.name);
+    print_step_message(&message, count, DATA_TYPES.len(), DOWNLOAD);
+
+    if let Ok(source_url) = get_data_source(data_type.source, data_type.source_match) {
+        let file_name = get_file_name(&source_url);
+        let file_path = format!("{}{}", PATHS.download_path, file_name);
+
+        if !Path::new(&file_path).exists() {
+            let message = format!("Downloading {}...", source_url);
+            print_step_message(&message, count, DATA_TYPES.len(), DOWNLOAD);
+
+            download_file(&source_url, &file_path)?;
+
+            let message = format!("{} downloaded successfully", style(file_name).cyan());
+            print_step_message(&message, count, DATA_TYPES.len(), SUCCESS);
+        } else {
+            let message = format!("{} already exists (skipped)", style(file_name).cyan());
+            print_step_message(&message, count, DATA_TYPES.len(), INFO);
+        }
+    } else {
+        let message = format!("Failed getting matching source for {}", data_type.name);
+        print_step_message(&message, count, DATA_TYPES.len(), ERROR);
+    }
     Ok(())
 }
 
@@ -170,7 +124,7 @@ fn extract_files() -> Result<(), Box<dyn Error>> {
 
         // Check if the file already exists in the extracted folder
         if let Some(existing_file_path) =
-            find_file_with_pattern(&extracted_folder, &data_type.file_name_pattern)
+            find_file_with_pattern(&extracted_folder, &data_type.data_file_pattern)
         {
             let data_file = existing_file_path.split('/').last().unwrap();
 
@@ -180,27 +134,37 @@ fn extract_files() -> Result<(), Box<dyn Error>> {
             continue;
         }
 
-        // Get the file name from the URL but only if the URL is found
-        let file_name = match get_url_from_map(data_type.name) {
-            Some(url) => {
-                // Get the file name from the URL
-                let file_name = get_file_name(&url);
-                file_name
-            }
-            None => {
-                let message = format!("URL for {} not found", data_type.name);
-                print_step_message(&message, count, DATA_TYPES.len(), ERROR);
+        let mut continue_extraction = false;
+        let mut file_name: Option<String> = None;
 
-                continue;
-            }
-        };
+        // If zip file is not present then download it and extract it
+        while !continue_extraction {
+            file_name =
+                match find_file_with_pattern(&PATHS.download_path, &data_type.zip_file_pattern) {
+                    Some(path) => {
+                        let file_name = path.split('/').last().unwrap().to_owned();
+                        continue_extraction = true;
+                        Some(file_name)
+                    }
+                    None => {
+                        download_data_file(data_type, count)?;
+                        None
+                    }
+                };
+        }
+
+        let file_name = file_name.unwrap();
 
         // Get the file path
         let file_path = format!("{}{}", PATHS.download_path, file_name);
 
         // Check if the file exists
         if Path::new(&file_path).exists() {
-            let message = format!("Extracting {} to {}", file_path, extracted_folder);
+            let message = format!(
+                "Extracting {} to {}",
+                style(file_name.clone()).cyan(),
+                extracted_folder
+            );
             print_step_message(&message, count, DATA_TYPES.len(), FOLDER);
 
             extract_file(&file_path, &extracted_folder)?;
@@ -230,7 +194,7 @@ fn read_files() -> Result<(), Box<dyn Error>> {
         println_step_message(&message, count, DATA_TYPES.len(), LOUPE);
 
         if let Some(data_file_path) =
-            find_file_with_pattern(&extracted_folder, &data_type.file_name_pattern)
+            find_file_with_pattern(&extracted_folder, &data_type.data_file_pattern)
         {
             {
                 let time = std::time::Instant::now();
@@ -260,34 +224,4 @@ fn read_files() -> Result<(), Box<dyn Error>> {
     }
 
     Ok(())
-}
-
-/**
- * Find a file with the given pattern in the given folder.
- */
-fn find_file_with_pattern(folder: &str, pattern: &regex::Regex) -> Option<String> {
-    for entry in walkdir::WalkDir::new(folder)
-        .into_iter()
-        .filter_map(|e| e.ok())
-    {
-        let path = entry.path();
-        if path.is_file() {
-            if let Some(file_name) = path.file_name().and_then(|name| name.to_str()) {
-                if pattern.is_match(file_name) {
-                    // return Some(path.to_path_buf());
-                    return Some(path.to_string_lossy().into_owned());
-                }
-            }
-        }
-    }
-    None
-}
-
-/**
- * Get the file name from the given URL.
- */
-fn get_file_name(url: &str) -> String {
-    let last_param = url.split('/').last().unwrap_or("");
-    let file_name = last_param.split('=').last().unwrap_or("");
-    file_name.to_string()
 }
