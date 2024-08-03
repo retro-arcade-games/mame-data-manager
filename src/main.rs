@@ -8,6 +8,7 @@ use num_format::{Locale, ToFormattedString};
 
 use core::data_types::{DataType, DATA_TYPES};
 use core::models::Machine;
+use core::writers::db_writer;
 use helpers::data_source_helper::get_data_source;
 use helpers::file_download_helper::download_file;
 use helpers::file_extractor_helper::extract_file;
@@ -15,14 +16,14 @@ use helpers::ui_helper::{
     icons::*, print_step_message, println_step_message, show_splash_screen, show_title,
 };
 use lazy_static::lazy_static;
-use serde_json::to_string_pretty;
 use std::collections::{HashMap, HashSet};
 use std::error::Error;
 use std::path::Path;
 use std::sync::{Arc, Mutex};
 
-#[macro_use] extern crate prettytable;
-use prettytable::{Table, Row, Cell};
+#[macro_use]
+extern crate prettytable;
+use prettytable::{Cell, Row, Table};
 
 lazy_static! {
     static ref MACHINES: Arc<Mutex<HashMap<String, Machine>>> =
@@ -44,7 +45,14 @@ fn show_menu() -> Result<(), Box<dyn Error>> {
     loop {
         show_title();
 
-        let selections = &["Download files", "Extract files", "Read files", "View stats", "Exit"];
+        let selections = &[
+            "Download files",
+            "Extract files",
+            "Read files",
+            "View stats",
+            "Create SQLite database",
+            "Exit",
+        ];
         let selection = Select::with_theme(&ColorfulTheme::default())
             .with_prompt("Choose an option")
             .default(0)
@@ -57,7 +65,8 @@ fn show_menu() -> Result<(), Box<dyn Error>> {
             1 => extract_files()?,
             2 => read_files()?,
             3 => show_stats()?,
-            4 => {
+            4 => create_database()?,
+            5 => {
                 println!("Exiting...");
                 break;
             }
@@ -122,7 +131,7 @@ fn extract_files() -> Result<(), Box<dyn Error>> {
     for data_type in DATA_TYPES.iter() {
         count += 1;
 
-        let extracted_folder = format!("{}{}", PATHS.extracted_path, data_type.name.to_lowercase());
+        let extracted_folder = format!("{}{}", PATHS.extract_path, data_type.name.to_lowercase());
 
         let message = format!("Checking if {} file already extracted...", data_type.name);
         println_step_message(&message, count, DATA_TYPES.len(), LOUPE);
@@ -193,7 +202,7 @@ fn read_files() -> Result<(), Box<dyn Error>> {
     for data_type in DATA_TYPES.iter() {
         count += 1;
 
-        let extracted_folder = format!("{}{}", PATHS.extracted_path, data_type.name.to_lowercase());
+        let extracted_folder = format!("{}{}", PATHS.extract_path, data_type.name.to_lowercase());
 
         let message = format!("Checking if {} file exists...", data_type.name);
         println_step_message(&message, count, DATA_TYPES.len(), LOUPE);
@@ -220,13 +229,6 @@ fn read_files() -> Result<(), Box<dyn Error>> {
             print_step_message(&message, count, DATA_TYPES.len(), ERROR);
         }
     }
-    let machines_guard = MACHINES.lock().unwrap();
-    if let Some(machine) = machines_guard.get("mk") {
-        let json_data = to_string_pretty(&machine).expect("Failed to serialize machine to JSON");
-        println!("Machine found: Name: mk, Data: {}", json_data);
-    } else {
-        println!("Machine with name 'mk' not found");
-    }
 
     Ok(())
 }
@@ -247,11 +249,14 @@ fn show_stats() -> Result<(), Box<dyn Error>> {
     let total_series = unique_series.len();
     let unique_genres = machines.iter().map(|m| &m.genre).collect::<HashSet<_>>();
     let total_genres = unique_genres.len();
-    let total_machines_with_history = machines.iter().filter(|m| m.history_sections.len() > 0).count();
+    let total_machines_with_history = machines
+        .iter()
+        .filter(|m| m.history_sections.len() > 0)
+        .count();
 
     let mut table = Table::new();
     table.set_titles(Row::new(vec![
-        Cell::new("MAME information statistics").style_spec("H2cFg"),
+        Cell::new("MAME information statistics").style_spec("H2cFg")
     ]));
 
     table.add_row(row![b -> "Information", "Amount"]);
@@ -264,6 +269,26 @@ fn show_stats() -> Result<(), Box<dyn Error>> {
     table.add_row(row!["Machines with history", r -> total_machines_with_history.to_formatted_string(&Locale::en)]);
 
     table.printstd();
+
+    Ok(())
+}
+
+/**
+ * Create the SQLite database.
+ */
+fn create_database() -> Result<(), Box<dyn Error>> {
+    let data_base_path = format!("{}{}", PATHS.export_path, "machines.db");
+
+    let time = std::time::Instant::now();
+
+    let message = format!("Creating {} database", style("machines.db").cyan());
+    println_step_message(&message, 1, 1, WRITE);
+
+    db_writer::write_machines(&data_base_path, MACHINES.clone())?;
+
+    let rounded_secs = (time.elapsed().as_secs_f32() * 10.0).round() / 10.0;
+    let message = format!("Database created in {}s", rounded_secs);
+    print_step_message(&message, 1, 1, SUCCESS);
 
     Ok(())
 }

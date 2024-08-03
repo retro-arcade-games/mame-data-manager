@@ -12,6 +12,7 @@ pub mod icons {
     pub static LOUPE: Emoji<'_, '_> = Emoji("🔍 ", "");
     pub static FOLDER: Emoji<'_, '_> = Emoji("🗂 ", "");
     pub static READ: Emoji<'_, '_> = Emoji("🧾 ", "");
+    pub static WRITE: Emoji<'_, '_> = Emoji("📝 ", "");
 }
 
 lazy_static! {
@@ -25,19 +26,27 @@ pub fn clear_console() {
     TERM.clear_screen().unwrap();
 }
 
-// function that receives a message, current step and total steps and an icon and prints a message to the console
+/**
+ * Print a message with the current step and total steps.
+ */
 pub fn print_step_message(message: &str, step: usize, total_steps: usize, icon: Emoji) {
     clean_last_line().unwrap_or_default();
 
     println_step_message(message, step, total_steps, icon)
 }
 
+/**
+ * Print a message with the current step and total steps.
+ */
 pub fn println_step_message(message: &str, step: usize, total_steps: usize, icon: Emoji) {
     let step = format!("[{}/{}]", step, total_steps);
 
     println!("{} {} {}", style(step).bold().dim(), icon, message,);
 }
 
+/**
+ * Initialize a progress bar.
+ */
 pub fn init_progress_bar(total: u64, message: &str) -> indicatif::ProgressBar {
     let pb = indicatif::ProgressBar::new(total);
     pb.set_style(
@@ -49,6 +58,9 @@ pub fn init_progress_bar(total: u64, message: &str) -> indicatif::ProgressBar {
     pb
 }
 
+/**
+ * Show the splash screen.
+ */
 pub fn show_splash_screen() {
     clear_console();
     println!(" █    ███         ███    █");
@@ -62,6 +74,9 @@ pub fn show_splash_screen() {
     println!("   ████             ████   ");
 }
 
+/**
+ * Show the title.
+ */
 pub fn show_title() {
     TERM.set_title("Mame Data Manager");
     println!();
@@ -71,6 +86,9 @@ pub fn show_title() {
     println!();
 }
 
+/**
+ * Clean the last line.
+ */
 fn clean_last_line() -> Result<(), io::Error> {
     TERM.move_cursor_up(1)?;
     TERM.clear_line()?;

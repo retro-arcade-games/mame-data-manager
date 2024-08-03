@@ -5,13 +5,15 @@ use crate::core::data_types::DATA_TYPES;
 pub struct Paths {
     pub data_path: &'static str,
     pub download_path: &'static str,
-    pub extracted_path: &'static str,
+    pub extract_path: &'static str,
+    pub export_path: &'static str,
 }
 
 pub const PATHS: Paths = Paths {
     data_path: "data/",
     download_path: "data/downloads/",
-    extracted_path: "data/extracted/",
+    extract_path: "data/extracted/",
+    export_path: "data/export/",
 };
 
 /**
@@ -48,7 +50,12 @@ pub fn get_file_name(url: &str) -> String {
  * Check if the required folder structure exists and create it if it doesn't.
  */
 pub fn check_folder_structure() -> Result<(), Box<dyn Error>> {
-    let paths = [PATHS.data_path, PATHS.download_path, PATHS.extracted_path];
+    let paths = [
+        PATHS.data_path,
+        PATHS.download_path,
+        PATHS.extract_path,
+        PATHS.export_path,
+    ];
 
     for path in paths.iter() {
         if !Path::new(path).exists() {
@@ -57,7 +64,7 @@ pub fn check_folder_structure() -> Result<(), Box<dyn Error>> {
     }
 
     for data_type in DATA_TYPES.iter() {
-        let subfolder = format!("{}/{}", PATHS.extracted_path, data_type.name.to_lowercase());
+        let subfolder = format!("{}/{}", PATHS.extract_path, data_type.name.to_lowercase());
         if !Path::new(&subfolder).exists() {
             fs::create_dir_all(&subfolder)?;
         }

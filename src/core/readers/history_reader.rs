@@ -203,7 +203,7 @@ fn get_section_order(section: &str) -> usize {
         "- STAFF -" => 8,
         "- PORTS -" => 9,
         "- CONTRIBUTE -" => 10,
-        _ => 1,
+        _ => 0,
     }
 }
 
