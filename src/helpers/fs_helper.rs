@@ -28,7 +28,6 @@ pub fn find_file_with_pattern(folder: &str, pattern: &regex::Regex) -> Option<St
         if path.is_file() {
             if let Some(file_name) = path.file_name().and_then(|name| name.to_str()) {
                 if pattern.is_match(file_name) {
-                    // return Some(path.to_path_buf());
                     return Some(path.to_string_lossy().into_owned());
                 }
             }

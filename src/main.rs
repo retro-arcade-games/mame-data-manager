@@ -8,7 +8,7 @@ use num_format::{Locale, ToFormattedString};
 
 use core::data_types::{DataType, DATA_TYPES};
 use core::models::Machine;
-use core::writers::db_writer;
+use core::writers::{db_writer, json_writer};
 use helpers::data_source_helper::get_data_source;
 use helpers::file_download_helper::download_file;
 use helpers::file_extractor_helper::extract_file;
@@ -50,7 +50,7 @@ fn show_menu() -> Result<(), Box<dyn Error>> {
             "Extract files",
             "Read files",
             "View stats",
-            "Create SQLite database",
+            "Export data...",
             "Exit",
         ];
         let selection = Select::with_theme(&ColorfulTheme::default())
@@ -65,9 +65,35 @@ fn show_menu() -> Result<(), Box<dyn Error>> {
             1 => extract_files()?,
             2 => read_files()?,
             3 => show_stats()?,
-            4 => create_database()?,
+            4 => show_export_submenu()?,
             5 => {
-                println!("Exiting...");
+                break;
+            }
+            _ => unreachable!(),
+        }
+    }
+
+    Ok(())
+}
+
+/**
+ * Show the export submenu.
+ */
+fn show_export_submenu() -> Result<(), Box<dyn Error>> {
+    loop {
+
+        let selections = &["Export to SQLite", "Export to JSON", "Back"];
+        let selection = Select::with_theme(&ColorfulTheme::default())
+            .with_prompt("Choose an option")
+            .default(0)
+            .items(&selections[..])
+            .interact()
+            .unwrap();
+
+        match selection {
+            0 => create_database()?,
+            1 => create_json()?,
+            2 => {
                 break;
             }
             _ => unreachable!(),
@@ -288,6 +314,26 @@ fn create_database() -> Result<(), Box<dyn Error>> {
 
     let rounded_secs = (time.elapsed().as_secs_f32() * 10.0).round() / 10.0;
     let message = format!("Database created in {}s", rounded_secs);
+    print_step_message(&message, 1, 1, SUCCESS);
+
+    Ok(())
+}
+
+/**
+ * Create the JSON file.
+ */
+fn create_json() -> Result<(), Box<dyn Error>> {
+    let json_base_path = format!("{}{}", PATHS.export_path, "machines.json");
+
+    let time = std::time::Instant::now();
+
+    let message = format!("Creating {} JSON file", style("machines.json").cyan());
+    println_step_message(&message, 1, 1, WRITE);
+
+    json_writer::write_machines(&json_base_path, MACHINES.clone())?;
+
+    let rounded_secs = (time.elapsed().as_secs_f32() * 10.0).round() / 10.0;
+    let message = format!("JSON file created in {}s", rounded_secs);
     print_step_message(&message, 1, 1, SUCCESS);
 
     Ok(())
