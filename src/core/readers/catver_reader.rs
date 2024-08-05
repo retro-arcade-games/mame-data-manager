@@ -40,6 +40,9 @@ pub fn read_catver_file(
     let file = File::open(file_path)?;
     let reader = BufReader::new(file);
 
+    let mut processed_count = 0;
+    let batch = 1000;
+
     for line in reader.lines() {
         let line = line?;
         let trimmed = line.trim();
@@ -70,8 +73,16 @@ pub fn read_catver_file(
                     machine.is_mature = Some(is_mature);
                 }
             }
-            pb.inc(1);
+            processed_count += 1;
+            if processed_count % batch == 0 {
+                pb.inc(batch);
+            }
         }
+    }
+
+    let remaining = processed_count % batch;
+    if remaining > 0 {
+        pb.inc(remaining as u64);
     }
 
     pb.finish_and_clear();

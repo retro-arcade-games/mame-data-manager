@@ -62,6 +62,9 @@ pub fn read_history_file(
 
     let mut current_entry: Option<HistoryEntry> = None;
 
+    let mut processed_count = 0;
+    let batch = 1000;
+
     loop {
         match xml_reader.read_event(&mut buf) {
             Ok(Event::Start(ref e)) => {
@@ -78,7 +81,11 @@ pub fn read_history_file(
                                 machine.history_sections = entry.sections.clone();
                             }
                         }
-                        pb.inc(1);
+
+                        processed_count += 1;
+                        if processed_count % batch == 0 {
+                            pb.inc(batch);
+                        }
                     }
                 }
                 _ => (),
@@ -88,6 +95,11 @@ pub fn read_history_file(
             _ => (),
         }
         buf.clear();
+    }
+
+    let remaining = processed_count % batch;
+    if remaining > 0 {
+        pb.inc(remaining as u64);
     }
 
     pb.finish_and_clear();

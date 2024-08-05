@@ -39,6 +39,9 @@ pub fn read_series_file(
 
     let mut current_series: Option<String> = None;
 
+    let mut processed_count = 0;
+    let batch = 1000;
+
     for line in reader.lines() {
         let line = line?;
 
@@ -52,10 +55,19 @@ pub fn read_series_file(
             } else if let Some(series) = &current_series {
                 if let Some(machine) = machines.get_mut(&line) {
                     machine.series = Some(series.clone());
-                    pb.inc(1);
+
+                    processed_count += 1;
+                    if processed_count % batch == 0 {
+                        pb.inc(batch);
+                    }
                 }
             }
         }
+    }
+
+    let remaining = processed_count % batch;
+    if remaining > 0 {
+        pb.inc(remaining as u64);
     }
 
     pb.finish_and_clear();

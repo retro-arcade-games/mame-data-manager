@@ -41,6 +41,9 @@ pub fn read_languages_file(
     // Define lines to ignore
     let to_ignore = vec![";", "", " ", "", "[FOLDER_SETTINGS]", "[ROOT_FOLDER]"];
 
+    let mut processed_count = 0;
+    let batch = 1000;
+
     // Process each line of the file
     for line in reader.lines() {
         let line = line?;
@@ -56,12 +59,20 @@ pub fn read_languages_file(
                 // Update the machine's languages if the line matches a machine name
                 if let Some(machine) = machines.get_mut(&line) {
                     machine.languages.push(language.clone());
-                    pb.inc(1);
+
+                    processed_count += 1;
+                    if processed_count % batch == 0 {
+                        pb.inc(batch);
+                    }
                 }
             }
         }
     }
 
+    let remaining = processed_count % batch;
+    if remaining > 0 {
+        pb.inc(remaining as u64);
+    }
     pb.finish_and_clear();
     Ok(())
 }

@@ -79,6 +79,9 @@ pub fn read_mame_file(
 
     let mut current_machine: Option<Machine> = None;
 
+    let mut processed_count = 0;
+    let batch = 5000;
+
     loop {
         match xml_reader.read_event(&mut buf) {
             Ok(Event::Start(ref e)) => {
@@ -92,7 +95,11 @@ pub fn read_mame_file(
                     if let Some(machine) = current_machine.take() {
                         machines.insert(machine.name.clone(), machine);
                     }
-                    pb.inc(1);
+
+                    processed_count += 1;
+                    if processed_count % batch == 0 {
+                        pb.inc(batch);
+                    }
                 }
                 _ => (),
             },
@@ -101,6 +108,11 @@ pub fn read_mame_file(
             _ => (),
         }
         buf.clear();
+    }
+
+    let remaining = processed_count % batch;
+    if remaining > 0 {
+        pb.inc(remaining as u64);
     }
 
     pb.finish_and_clear();

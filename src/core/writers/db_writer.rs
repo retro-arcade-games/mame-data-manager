@@ -235,6 +235,9 @@ pub fn write_machines(db_path: &str, machines: Arc<Mutex<HashMap<String, Machine
     let total_elements = machines.len();
     let pb = init_progress_bar(total_elements as u64, "machines");
 
+    let mut processed_count = 0;
+    let batch = 5000;
+
     let mut transaction = conn.transaction()?;
     for machine in machines.values() {
         insert_machine_data(&transaction, machine)?;
@@ -245,11 +248,22 @@ pub fn write_machines(db_path: &str, machines: Arc<Mutex<HashMap<String, Machine
             transaction = conn.transaction()?;
             batch_count = 0;
         }
-        pb.inc(1);
+
+        processed_count += 1;
+        if processed_count % batch == 0 {
+            pb.inc(batch);
+        }
     }
 
     // Commit any remaining transactions
     transaction.commit()?;
+
+    let remaining = processed_count % batch;
+    if remaining > 0 {
+        pb.inc(remaining as u64);
+    }
+
+    pb.finish_and_clear();
 
     Ok(())
 }
