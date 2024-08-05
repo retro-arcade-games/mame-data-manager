@@ -1,3 +1,4 @@
+use crate::core::models::Machine;
 use serde_json::to_string;
 use std::io::Write;
 use std::{
@@ -5,7 +6,6 @@ use std::{
     fs::File,
     sync::{Arc, Mutex},
 };
-use crate::core::models::Machine;
 
 /**
  * Write the given machines data to a json file.

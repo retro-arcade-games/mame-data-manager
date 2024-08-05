@@ -7,6 +7,7 @@ use helpers::fs_helper::{check_folder_structure, find_file_with_pattern, get_fil
 use num_format::{Locale, ToFormattedString};
 
 use core::data_types::{DataType, DATA_TYPES};
+use core::filters::name_refactor;
 use core::models::Machine;
 use core::writers::{db_writer, json_writer};
 use helpers::data_source_helper::get_data_source;
@@ -50,6 +51,7 @@ fn show_menu() -> Result<(), Box<dyn Error>> {
             "Extract files",
             "Read files",
             "View stats",
+            "Cleanup & filter data...",
             "Export data...",
             "Exit",
         ];
@@ -65,8 +67,9 @@ fn show_menu() -> Result<(), Box<dyn Error>> {
             1 => extract_files()?,
             2 => read_files()?,
             3 => show_stats()?,
-            4 => show_export_submenu()?,
-            5 => {
+            4 => show_filter_submenu()?,
+            5 => show_export_submenu()?,
+            6 => {
                 break;
             }
             _ => unreachable!(),
@@ -77,11 +80,55 @@ fn show_menu() -> Result<(), Box<dyn Error>> {
 }
 
 /**
+ * Show the filter submenu.
+ */
+fn show_filter_submenu() -> Result<(), Box<dyn Error>> {
+    loop {
+        let selections = &["Cleanup names", "Back"];
+        let selection = Select::with_theme(&ColorfulTheme::default())
+            .with_prompt("Choose an option")
+            .default(0)
+            .items(&selections[..])
+            .interact()
+            .unwrap();
+
+        match selection {
+            0 => refactor_names()?,
+            1 => {
+                break;
+            }
+            _ => unreachable!(),
+        }
+    }
+
+    Ok(())
+}
+
+/**
+ * Refactor the names.
+ */
+
+fn refactor_names() -> Result<(), Box<dyn Error>> {
+    let message = format!("Refactoring machine names");
+    println_step_message(&message, 1, 1, WRITE);
+
+    let time = std::time::Instant::now();
+
+    let mut machines_guard = MACHINES.lock().unwrap();
+    let _ = name_refactor::refactor_names(&mut machines_guard);
+
+    let rounded_secs = (time.elapsed().as_secs_f32() * 10.0).round() / 10.0;
+    let message = format!("Machine names refactored in {}s", rounded_secs);
+    print_step_message(&message, 1, 1, SUCCESS);
+
+    Ok(())
+}
+
+/**
  * Show the export submenu.
  */
 fn show_export_submenu() -> Result<(), Box<dyn Error>> {
     loop {
-
         let selections = &["Export to SQLite", "Export to JSON", "Back"];
         let selection = Select::with_theme(&ColorfulTheme::default())
             .with_prompt("Choose an option")

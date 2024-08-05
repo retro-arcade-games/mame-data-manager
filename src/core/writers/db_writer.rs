@@ -34,6 +34,15 @@ fn create_database(conn: &Connection) -> Result<()> {
     )?;
 
     conn.execute(
+        "CREATE TABLE IF NOT EXISTS custom_data (
+                  machine_name TEXT,
+                  name TEXT,
+                  FOREIGN KEY(machine_name) REFERENCES machine(name)
+                  )",
+        [],
+    )?;
+
+    conn.execute(
         "CREATE TABLE IF NOT EXISTS bios_set (
                   machine_name TEXT,
                   name TEXT,
@@ -141,6 +150,13 @@ fn insert_machine_data(transaction: &Transaction, machine: &Machine) -> Result<(
             machine.is_mature,
         ],
     )?;
+
+    if let Some(custom_data) = &machine.custom_data {
+        transaction.execute(
+            "INSERT OR REPLACE INTO custom_data (machine_name, name) VALUES (?1, ?2)",
+            params![machine.name, custom_data.name],
+        )?;
+    }
 
     for bios_set in &machine.bios_sets {
         transaction.execute(
