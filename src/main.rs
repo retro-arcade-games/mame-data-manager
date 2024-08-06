@@ -7,7 +7,7 @@ use helpers::fs_helper::{check_folder_structure, find_file_with_pattern, get_fil
 use num_format::{Locale, ToFormattedString};
 
 use core::data_types::{DataType, DATA_TYPES};
-use core::filters::name_refactor;
+use core::filters::{filter_genres, name_refactor};
 use core::models::Machine;
 use core::writers::{db_writer, json_writer};
 use helpers::data_source_helper::get_data_source;
@@ -84,7 +84,7 @@ fn show_menu() -> Result<(), Box<dyn Error>> {
  */
 fn show_filter_submenu() -> Result<(), Box<dyn Error>> {
     loop {
-        let selections = &["Cleanup names", "Back"];
+        let selections = &["Cleanup names", "Remove non game categories", "Back"];
         let selection = Select::with_theme(&ColorfulTheme::default())
             .with_prompt("Choose an option")
             .default(0)
@@ -94,7 +94,8 @@ fn show_filter_submenu() -> Result<(), Box<dyn Error>> {
 
         match selection {
             0 => refactor_names()?,
-            1 => {
+            1 => filter_categories()?,
+            2 => {
                 break;
             }
             _ => unreachable!(),
@@ -119,6 +120,25 @@ fn refactor_names() -> Result<(), Box<dyn Error>> {
 
     let rounded_secs = (time.elapsed().as_secs_f32() * 10.0).round() / 10.0;
     let message = format!("Machine names refactored in {}s", rounded_secs);
+    print_step_message(&message, 1, 1, SUCCESS);
+
+    Ok(())
+}
+
+/**
+ * Filter the categories.
+ */
+fn filter_categories() -> Result<(), Box<dyn Error>> {
+    let message = format!("Removing non game machines");
+    println_step_message(&message, 1, 1, WRITE);
+
+    let time = std::time::Instant::now();
+
+    let mut machines_guard = MACHINES.lock().unwrap();
+    let removed_machines = filter_genres::filter_genres(&mut machines_guard);
+
+    let rounded_secs = (time.elapsed().as_secs_f32() * 10.0).round() / 10.0;
+    let message = format!("{} machines removed in {}s", removed_machines?, rounded_secs);
     print_step_message(&message, 1, 1, SUCCESS);
 
     Ok(())
