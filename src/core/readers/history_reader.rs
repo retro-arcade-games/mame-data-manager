@@ -174,6 +174,9 @@ fn parse_text(text: &str) -> Vec<HistorySection> {
     for line in text.lines() {
         if document_sections.contains(&line) {
             if !current_section_text.is_empty() {
+                if current_section_name == "" {
+                    current_section_name = "description".to_string();
+                }
                 sections.push(HistorySection {
                     name: current_section_name.clone(),
                     text: current_section_text.trim().to_string(),
