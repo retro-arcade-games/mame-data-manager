@@ -40,6 +40,7 @@ fn create_database(conn: &Connection) -> Result<()> {
                   machine_name TEXT,
                   name TEXT,
                   manufacturer TEXT,
+                  players TEXT,
                   FOREIGN KEY(machine_name) REFERENCES machine(name)
                   )",
         [],
@@ -157,8 +158,8 @@ fn insert_machine_data(transaction: &Transaction, machine: &Machine) -> Result<(
 
     if let Some(custom_data) = &machine.custom_data {
         transaction.execute(
-            "INSERT OR REPLACE INTO custom_data (machine_name, name, manufacturer) VALUES (?1, ?2, ?3)",
-            params![machine.name, custom_data.name, custom_data.manufacturer],
+            "INSERT OR REPLACE INTO custom_data (machine_name, name, manufacturer, players) VALUES (?1, ?2, ?3, ?4)",
+            params![machine.name, custom_data.name, custom_data.manufacturer, custom_data.players],
         )?;
     }
 

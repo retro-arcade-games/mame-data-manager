@@ -82,4 +82,5 @@ pub struct HistorySection {
 pub struct CustomData {
     pub name: Option<String>,
     pub manufacturer: Option<String>,
+    pub players: Option<String>,
 }

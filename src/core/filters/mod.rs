@@ -5,3 +5,4 @@ pub mod filter_genres;
 pub mod filter_non_games;
 pub mod manufacturer_refactor;
 pub mod name_refactor;
+pub mod nplayers_refactor;

@@ -51,12 +51,13 @@ fn is_non_game_machine(machine: &Machine) -> bool {
         || machine.is_mechanical.unwrap_or(false)
         || is_modified_machine(&machine.description.as_ref().unwrap_or(&"".to_string()))
         || has_invalid_manufacturer(machine)
+        || has_invalid_players(&machine)
 }
 
 /**
  * Check if the machine is a modified version by its description
  */
-pub fn is_modified_machine(description: &str) -> bool {
+fn is_modified_machine(description: &str) -> bool {
     let modified_keywords = vec![
         "bootleg",
         "PlayChoice-10",
@@ -74,7 +75,7 @@ pub fn is_modified_machine(description: &str) -> bool {
 /**
  * Check if custom_data.manufacturer is invalid
  */
-pub fn has_invalid_manufacturer(machine: &Machine) -> bool {
+fn has_invalid_manufacturer(machine: &Machine) -> bool {
     let invalid_manufacturers = vec!["unknown", "bootleg"];
     // Check if machine has custom data
     if let Some(custom_data) = &machine.custom_data {
@@ -87,6 +88,24 @@ pub fn has_invalid_manufacturer(machine: &Machine) -> bool {
                 {
                     return true;
                 }
+            }
+        }
+    }
+    false
+}
+
+/**
+ * Check if players is invalid
+ */
+fn has_invalid_players(machine: &Machine) -> bool {
+    let invalid_players = vec!["BIOS", "Device", "Non-arcade"];
+    if let Some(players) = &machine.players {
+        for invalid_player in invalid_players {
+            if players
+                .to_lowercase()
+                .contains(&invalid_player.to_lowercase())
+            {
+                return true;
             }
         }
     }

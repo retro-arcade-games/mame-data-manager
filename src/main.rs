@@ -7,7 +7,9 @@ use helpers::fs_helper::{check_folder_structure, find_file_with_pattern, get_fil
 use num_format::{Locale, ToFormattedString};
 
 use core::data_types::{DataType, DATA_TYPES};
-use core::filters::{filter_genres, filter_non_games, manufacturer_refactor, name_refactor};
+use core::filters::{
+    filter_genres, filter_non_games, manufacturer_refactor, name_refactor, nplayers_refactor,
+};
 use core::models::Machine;
 use core::writers::{db_writer, json_writer};
 use helpers::data_source_helper::get_data_source;
@@ -89,6 +91,7 @@ fn show_filter_submenu() -> Result<(), Box<dyn Error>> {
             "Remove non game genres",
             "Remove non games",
             "Refactor manufacturers",
+            "Refactor players",
             "Back",
         ];
         let selection = Select::with_theme(&ColorfulTheme::default())
@@ -103,7 +106,8 @@ fn show_filter_submenu() -> Result<(), Box<dyn Error>> {
             1 => filter_genres()?,
             2 => filter_non_games()?,
             3 => refactor_manufacturers()?,
-            4 => {
+            4 => refactor_nplayers()?,
+            5 => {
                 break;
             }
             _ => unreachable!(),
@@ -191,6 +195,25 @@ fn refactor_manufacturers() -> Result<(), Box<dyn Error>> {
 
     let rounded_secs = (time.elapsed().as_secs_f32() * 10.0).round() / 10.0;
     let message = format!("Manufacturers refactored in {}s", rounded_secs);
+    print_step_message(&message, 1, 1, SUCCESS);
+
+    Ok(())
+}
+
+/**
+ * Refactor the number of players.
+ */
+fn refactor_nplayers() -> Result<(), Box<dyn Error>> {
+    let message = format!("Refactoring number of players");
+    println_step_message(&message, 1, 1, WRITE);
+
+    let time = std::time::Instant::now();
+
+    let mut machines_guard = MACHINES.lock().unwrap();
+    let _ = nplayers_refactor::refactor_nplayers(&mut machines_guard);
+
+    let rounded_secs = (time.elapsed().as_secs_f32() * 10.0).round() / 10.0;
+    let message = format!("Number of players refactored in {}s", rounded_secs);
     print_step_message(&message, 1, 1, SUCCESS);
 
     Ok(())
