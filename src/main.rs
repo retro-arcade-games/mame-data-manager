@@ -7,7 +7,7 @@ use helpers::fs_helper::{check_folder_structure, find_file_with_pattern, get_fil
 use num_format::{Locale, ToFormattedString};
 
 use core::data_types::{DataType, DATA_TYPES};
-use core::filters::{filter_genres, name_refactor};
+use core::filters::{filter_genres, filter_non_games, name_refactor};
 use core::models::Machine;
 use core::writers::{db_writer, json_writer};
 use helpers::data_source_helper::get_data_source;
@@ -84,7 +84,12 @@ fn show_menu() -> Result<(), Box<dyn Error>> {
  */
 fn show_filter_submenu() -> Result<(), Box<dyn Error>> {
     loop {
-        let selections = &["Cleanup names", "Remove non game categories", "Back"];
+        let selections = &[
+            "Cleanup names",
+            "Remove non game genres",
+            "Remove non games",
+            "Back",
+        ];
         let selection = Select::with_theme(&ColorfulTheme::default())
             .with_prompt("Choose an option")
             .default(0)
@@ -94,8 +99,9 @@ fn show_filter_submenu() -> Result<(), Box<dyn Error>> {
 
         match selection {
             0 => refactor_names()?,
-            1 => filter_categories()?,
-            2 => {
+            1 => filter_genres()?,
+            2 => filter_non_games()?,
+            3 => {
                 break;
             }
             _ => unreachable!(),
@@ -128,8 +134,8 @@ fn refactor_names() -> Result<(), Box<dyn Error>> {
 /**
  * Filter the categories.
  */
-fn filter_categories() -> Result<(), Box<dyn Error>> {
-    let message = format!("Removing non game machines");
+fn filter_genres() -> Result<(), Box<dyn Error>> {
+    let message = format!("Removing non game machines by genre");
     println_step_message(&message, 1, 1, WRITE);
 
     let time = std::time::Instant::now();
@@ -138,7 +144,32 @@ fn filter_categories() -> Result<(), Box<dyn Error>> {
     let removed_machines = filter_genres::filter_genres(&mut machines_guard);
 
     let rounded_secs = (time.elapsed().as_secs_f32() * 10.0).round() / 10.0;
-    let message = format!("{} machines removed in {}s", removed_machines?, rounded_secs);
+    let message = format!(
+        "{} machines removed in {}s",
+        removed_machines?, rounded_secs
+    );
+    print_step_message(&message, 1, 1, SUCCESS);
+
+    Ok(())
+}
+
+/**
+ * Filter the non games.
+ */
+fn filter_non_games() -> Result<(), Box<dyn Error>> {
+    let message = format!("Removing non game machines");
+    println_step_message(&message, 1, 1, WRITE);
+
+    let time = std::time::Instant::now();
+
+    let mut machines_guard = MACHINES.lock().unwrap();
+    let removed_machines = filter_non_games::filter_non_games(&mut machines_guard);
+
+    let rounded_secs = (time.elapsed().as_secs_f32() * 10.0).round() / 10.0;
+    let message = format!(
+        "{} machines removed in {}s",
+        removed_machines?, rounded_secs
+    );
     print_step_message(&message, 1, 1, SUCCESS);
 
     Ok(())
