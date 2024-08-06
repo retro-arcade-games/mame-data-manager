@@ -1,5 +1,6 @@
 use rusqlite::{params, Connection, Result, Transaction};
 use std::collections::HashMap;
+use std::fs;
 use std::sync::{Arc, Mutex};
 
 use crate::core::models::Machine;
@@ -28,7 +29,8 @@ fn create_database(conn: &Connection) -> Result<()> {
                   series TEXT,
                   genre TEXT,
                   subgenre TEXT,
-                  is_mature INTEGER
+                  is_mature INTEGER,
+                  languages TEXT
                   )",
         [],
     )?;
@@ -127,8 +129,8 @@ fn insert_machine_data(transaction: &Transaction, machine: &Machine) -> Result<(
     transaction.execute(
         "INSERT OR REPLACE INTO machine (
                   name, source_file, rom_of, clone_of, is_bios, is_device, runnable, is_mechanical, sample_of,
-                  description, year, manufacturer, driver_status, players, series, genre, subgenre, is_mature
-                  ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18)",
+                  description, year, manufacturer, driver_status, players, series, genre, subgenre, is_mature, languages
+                  ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19)",
         params![
             machine.name,
             machine.source_file,
@@ -148,6 +150,7 @@ fn insert_machine_data(transaction: &Transaction, machine: &Machine) -> Result<(
             machine.genre,
             machine.subgenre,
             machine.is_mature,
+            machine.languages.join(", ")
         ],
     )?;
 
@@ -240,6 +243,11 @@ fn insert_machine_data(transaction: &Transaction, machine: &Machine) -> Result<(
  * Write the given machines data to the database.
  */
 pub fn write_machines(db_path: &str, machines: Arc<Mutex<HashMap<String, Machine>>>) -> Result<()> {
+
+    if fs::metadata(db_path).is_ok() {
+        let _ = fs::remove_file(db_path);
+    }
+
     let mut conn = Connection::open(db_path).unwrap();
 
     create_database(&conn)?;

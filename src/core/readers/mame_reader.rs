@@ -14,13 +14,13 @@ use std::io::BufReader;
  * - `Machine`: Represents a single arcade machine with various attributes:
  *   - `name`: The unique identifier for the machine (attribute).
  *   - `source_file`: Optional source file for the machine's data (attribute).
- *   - `rom_of`: Optional name of the ROM set that this machine is based on (attribute).
- *   - `clone_of`: Optional name of the ROM set this machine is a clone of (attribute).
+ *   - `rom_of`: Optional the ROM depends on files from another ROM to function correctly. (attribute).
+ *   - `clone_of`: Optional the ROM is a modified version or variant of another ROM known as the parent ROM. (attribute).
  *   - `is_bios`: Optional flag indicating if the machine is a BIOS (attribute).
  *   - `is_device`: Optional flag indicating if the machine is a device (attribute).
  *   - `runnable`: Optional flag indicating if the machine is runnable (attribute).
  *   - `is_mechanical`: Optional flag indicating if the machine is mechanical (attribute).
- *   - `sample_of`: Optional name of the sample set associated with this machine (attribute).
+ *   - `sample_of`: Optional the ROM uses specific sound samples from another ROM. (attribute).
  *   - `description`: Optional textual description of the machine (child node).
  *   - `year`: Optional year of release (child node).
  *   - `manufacturer`: Optional manufacturer name (child node).
