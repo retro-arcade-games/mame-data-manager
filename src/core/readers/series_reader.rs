@@ -1,6 +1,5 @@
-use crate::core::models::Machine;
+use crate::core::data::MACHINES;
 use crate::helpers::ui_helper::init_progress_bar;
-use std::collections::HashMap;
 use std::error::Error;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
@@ -25,10 +24,8 @@ use std::io::{BufRead, BufReader};
 /**
  * Read the contents of the given series file and populate the given HashMap with the series.
  */
-pub fn read_series_file(
-    file_path: &str,
-    machines: &mut HashMap<String, Machine>,
-) -> Result<(), Box<dyn Error>> {
+pub fn read_series_file(file_path: &str) -> Result<(), Box<dyn Error>> {
+    let mut machines = MACHINES.lock().unwrap();
     let total_elements = count_total_elements(file_path)?;
     let pb = init_progress_bar(total_elements as u64, "roms in series.ini");
 

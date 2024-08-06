@@ -1,8 +1,7 @@
 use rusqlite::{params, Connection, Result, Transaction};
-use std::collections::HashMap;
 use std::fs;
-use std::sync::{Arc, Mutex};
 
+use crate::core::data::MACHINES;
 use crate::core::models::Machine;
 use crate::helpers::ui_helper::init_progress_bar;
 
@@ -245,7 +244,7 @@ fn insert_machine_data(transaction: &Transaction, machine: &Machine) -> Result<(
 /**
  * Write the given machines data to the database.
  */
-pub fn write_machines(db_path: &str, machines: Arc<Mutex<HashMap<String, Machine>>>) -> Result<()> {
+pub fn write_machines(db_path: &str) -> Result<()> {
     if fs::metadata(db_path).is_ok() {
         let _ = fs::remove_file(db_path);
     }
@@ -254,7 +253,7 @@ pub fn write_machines(db_path: &str, machines: Arc<Mutex<HashMap<String, Machine
 
     create_database(&conn)?;
 
-    let machines = machines.lock().unwrap();
+    let machines = MACHINES.lock().unwrap();
     let batch_size = 5000;
     let mut batch_count = 0;
 

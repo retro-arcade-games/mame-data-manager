@@ -1,8 +1,8 @@
+use crate::core::data::MACHINES;
 use crate::core::models::{BiosSet, CustomData, DeviceRef, Disk, Machine, Rom, Sample, Software};
 use crate::helpers::ui_helper::init_progress_bar;
 use quick_xml::events::Event;
 use quick_xml::Reader;
-use std::collections::HashMap;
 use std::error::Error;
 use std::fs::{self, File};
 use std::io::BufReader;
@@ -58,10 +58,9 @@ use std::io::BufReader;
 /**
  * Read the contents of the given MAME XML file and populate the given HashMap with the machines.
  */
-pub fn read_mame_file(
-    file_path: &str,
-    machines: &mut HashMap<String, Machine>,
-) -> Result<(), Box<dyn std::error::Error>> {
+pub fn read_mame_file(file_path: &str) -> Result<(), Box<dyn std::error::Error>> {
+    let mut machines = MACHINES.lock().unwrap();
+
     let file = File::open(file_path)?;
     let reader = BufReader::new(file);
 
@@ -191,8 +190,7 @@ fn process_node(
                 machine.custom_data = Some(CustomData::default());
             }
             machine.custom_data.as_mut().unwrap().is_parent = Some(true);
-            if machine.clone_of.is_some() || machine.rom_of.is_some() || machine.sample_of.is_some()
-            {
+            if machine.clone_of.is_some() || machine.sample_of.is_some() {
                 machine.custom_data.as_mut().unwrap().is_parent = Some(false);
             }
             *current_machine = Some(machine);

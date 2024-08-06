@@ -1,19 +1,13 @@
-use crate::core::models::Machine;
+use crate::core::data::MACHINES;
 use serde_json::to_string;
+use std::fs::File;
 use std::io::Write;
-use std::{
-    collections::HashMap,
-    fs::File,
-    sync::{Arc, Mutex},
-};
 
 /**
  * Write the given machines data to a json file.
  */
-pub fn write_machines(
-    db_path: &str,
-    machines: Arc<Mutex<HashMap<String, Machine>>>,
-) -> Result<(), Box<dyn std::error::Error>> {
+pub fn write_machines(db_path: &str) -> Result<(), Box<dyn std::error::Error>> {
+    let machines = MACHINES.lock().unwrap();
     let json = to_string(&*machines)?;
     let mut file = File::create(db_path)?;
     file.write_all(json.as_bytes())?;

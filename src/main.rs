@@ -6,6 +6,7 @@ use dialoguer::{theme::ColorfulTheme, Select};
 use helpers::fs_helper::{check_folder_structure, find_file_with_pattern, get_file_name, PATHS};
 use num_format::{Locale, ToFormattedString};
 
+use core::data::MACHINES;
 use core::data_types::{DataType, DATA_TYPES};
 use core::filters::{
     filter_genres, filter_non_games, manufacturer_refactor, name_refactor, nplayers_refactor,
@@ -18,20 +19,13 @@ use helpers::file_extractor_helper::extract_file;
 use helpers::ui_helper::{
     icons::*, print_step_message, println_step_message, show_splash_screen, show_title,
 };
-use lazy_static::lazy_static;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 use std::error::Error;
 use std::path::Path;
-use std::sync::{Arc, Mutex};
 
 #[macro_use]
 extern crate prettytable;
 use prettytable::{Cell, Row, Table};
-
-lazy_static! {
-    static ref MACHINES: Arc<Mutex<HashMap<String, Machine>>> =
-        Arc::new(Mutex::new(HashMap::new()));
-}
 
 fn main() -> Result<(), Box<dyn Error>> {
     check_folder_structure()?;
@@ -127,8 +121,7 @@ fn refactor_names() -> Result<(), Box<dyn Error>> {
 
     let time = std::time::Instant::now();
 
-    let mut machines_guard = MACHINES.lock().unwrap();
-    let _ = name_refactor::refactor_names(&mut machines_guard);
+    let _ = name_refactor::refactor_names();
 
     let rounded_secs = (time.elapsed().as_secs_f32() * 10.0).round() / 10.0;
     let message = format!("Machine names refactored in {}s", rounded_secs);
@@ -146,8 +139,7 @@ fn filter_genres() -> Result<(), Box<dyn Error>> {
 
     let time = std::time::Instant::now();
 
-    let mut machines_guard = MACHINES.lock().unwrap();
-    let removed_machines = filter_genres::filter_genres(&mut machines_guard);
+    let removed_machines = filter_genres::filter_genres();
 
     let rounded_secs = (time.elapsed().as_secs_f32() * 10.0).round() / 10.0;
     let message = format!(
@@ -168,8 +160,7 @@ fn filter_non_games() -> Result<(), Box<dyn Error>> {
 
     let time = std::time::Instant::now();
 
-    let mut machines_guard = MACHINES.lock().unwrap();
-    let removed_machines = filter_non_games::filter_non_games(&mut machines_guard);
+    let removed_machines = filter_non_games::filter_non_games();
 
     let rounded_secs = (time.elapsed().as_secs_f32() * 10.0).round() / 10.0;
     let message = format!(
@@ -190,8 +181,7 @@ fn refactor_manufacturers() -> Result<(), Box<dyn Error>> {
 
     let time = std::time::Instant::now();
 
-    let mut machines_guard = MACHINES.lock().unwrap();
-    let _ = manufacturer_refactor::refactor_manufacturers(&mut machines_guard);
+    let _ = manufacturer_refactor::refactor_manufacturers();
 
     let rounded_secs = (time.elapsed().as_secs_f32() * 10.0).round() / 10.0;
     let message = format!("Manufacturers refactored in {}s", rounded_secs);
@@ -209,8 +199,7 @@ fn refactor_nplayers() -> Result<(), Box<dyn Error>> {
 
     let time = std::time::Instant::now();
 
-    let mut machines_guard = MACHINES.lock().unwrap();
-    let _ = nplayers_refactor::refactor_nplayers(&mut machines_guard);
+    let _ = nplayers_refactor::refactor_nplayers();
 
     let rounded_secs = (time.elapsed().as_secs_f32() * 10.0).round() / 10.0;
     let message = format!("Number of players refactored in {}s", rounded_secs);
@@ -385,8 +374,7 @@ fn read_files() -> Result<(), Box<dyn Error>> {
                 let message = format!("Reading {}...", style(data_file).cyan());
                 print_step_message(&message, count, DATA_TYPES.len(), READ);
 
-                let mut machines_guard = MACHINES.lock().unwrap();
-                let _ = (data_type.read_function)(&data_file_path, &mut machines_guard);
+                let _ = (data_type.read_function)(&data_file_path);
 
                 let rounded_secs = (time.elapsed().as_secs_f32() * 10.0).round() / 10.0;
                 let message = format!("{} loaded in {}s", style(data_file).cyan(), rounded_secs);
@@ -405,8 +393,8 @@ fn read_files() -> Result<(), Box<dyn Error>> {
  * Show the statistics.
  */
 fn show_stats() -> Result<(), Box<dyn Error>> {
-    let machines_guard = MACHINES.lock().unwrap();
-    let machines = machines_guard.values().collect::<Vec<&Machine>>();
+    let machines = MACHINES.lock().unwrap();
+    let machines = machines.values().collect::<Vec<&Machine>>();
 
     let total_machines = machines.len();
     let total_clones = machines.iter().filter(|m| m.clone_of.is_some()).count();
@@ -452,7 +440,7 @@ fn create_database() -> Result<(), Box<dyn Error>> {
     let message = format!("Creating {} database", style("machines.db").cyan());
     println_step_message(&message, 1, 1, WRITE);
 
-    db_writer::write_machines(&data_base_path, MACHINES.clone())?;
+    db_writer::write_machines(&data_base_path)?;
 
     let rounded_secs = (time.elapsed().as_secs_f32() * 10.0).round() / 10.0;
     let message = format!("Database created in {}s", rounded_secs);
@@ -472,7 +460,7 @@ fn create_json() -> Result<(), Box<dyn Error>> {
     let message = format!("Creating {} JSON file", style("machines.json").cyan());
     println_step_message(&message, 1, 1, WRITE);
 
-    json_writer::write_machines(&json_base_path, MACHINES.clone())?;
+    json_writer::write_machines(&json_base_path)?;
 
     let rounded_secs = (time.elapsed().as_secs_f32() * 10.0).round() / 10.0;
     let message = format!("JSON file created in {}s", rounded_secs);

@@ -1,14 +1,15 @@
-use std::{collections::HashMap, error::Error};
+use std::error::Error;
 
 use crate::{
-    core::models::{CustomData, Machine},
+    core::{data::MACHINES, models::CustomData},
     helpers::ui_helper::init_progress_bar,
 };
 
 /**
  * Refactor the names of the machines to ensure consistency and correctness.
  */
-pub fn refactor_names(machines: &mut HashMap<String, Machine>) -> Result<(), Box<dyn Error>> {
+pub fn refactor_names() -> Result<(), Box<dyn Error>> {
+    let mut machines = MACHINES.lock().unwrap();
     let pb = init_progress_bar(machines.len() as u64, "machines in collection");
 
     let mut processed_count = 0;

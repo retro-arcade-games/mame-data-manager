@@ -1,8 +1,8 @@
-use crate::core::models::{HistorySection, Machine};
+use crate::core::data::MACHINES;
+use crate::core::models::HistorySection;
 use crate::helpers::ui_helper::init_progress_bar;
 use quick_xml::events::Event;
 use quick_xml::Reader;
-use std::collections::HashMap;
 use std::error::Error;
 use std::fs::{self, File};
 use std::io::BufReader;
@@ -41,10 +41,8 @@ use std::io::BufReader;
 /**
  * Read the contents of the given history XML file and populate the given HashMap with the machines.
  */
-pub fn read_history_file(
-    file_path: &str,
-    machines: &mut HashMap<String, Machine>,
-) -> Result<(), Box<dyn Error>> {
+pub fn read_history_file(file_path: &str) -> Result<(), Box<dyn Error>> {
+    let mut machines = MACHINES.lock().unwrap();
     let file = File::open(file_path)?;
     let reader = BufReader::new(file);
 

@@ -1,10 +1,14 @@
-use crate::{core::models::Machine, helpers::ui_helper::init_progress_bar};
-use std::{collections::HashMap, error::Error};
+use crate::{
+    core::{data::MACHINES, models::Machine},
+    helpers::ui_helper::init_progress_bar,
+};
+use std::error::Error;
 
 /**
  * Filter out non-game machines from the collection
  */
-pub fn filter_non_games(machines: &mut HashMap<String, Machine>) -> Result<u64, Box<dyn Error>> {
+pub fn filter_non_games() -> Result<u64, Box<dyn Error>> {
+    let mut machines = MACHINES.lock().unwrap();
     let mut removed_machine_count: u64 = 0;
     let mut machines_to_remove: Vec<String> = Vec::new();
 

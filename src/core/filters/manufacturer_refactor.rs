@@ -1,10 +1,10 @@
 use crate::{
-    core::models::{CustomData, Machine},
+    core::{data::MACHINES, models::CustomData},
     helpers::ui_helper::init_progress_bar,
 };
 use lazy_static::lazy_static;
 use regex::Regex;
-use std::{collections::HashMap, error::Error};
+use std::error::Error;
 
 lazy_static! {
     static ref RE_COMMON: Regex = Regex::new(r"(?i)\b(Games|Corp|Inc|Ltd|Co|Corporation|Industries|Elc|S\.R\.L|S\.A|inc|of America|Japan|UK|USA|Europe|do Brasil|du Canada|Canada|America|Austria|of)\b\.?").unwrap();
@@ -15,9 +15,8 @@ lazy_static! {
 /**
  * Refactor the manufacturer name.
  */
-pub fn refactor_manufacturers(
-    machines: &mut HashMap<String, Machine>,
-) -> Result<(), Box<dyn Error>> {
+pub fn refactor_manufacturers() -> Result<(), Box<dyn Error>> {
+    let mut machines = MACHINES.lock().unwrap();
     let pb = init_progress_bar(machines.len() as u64, "machines in collection");
 
     let mut processed_count = 0;

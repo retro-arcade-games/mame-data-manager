@@ -1,10 +1,11 @@
-use crate::{core::models::Machine, helpers::ui_helper::init_progress_bar};
-use std::{collections::HashMap, error::Error};
+use crate::{core::data::MACHINES, helpers::ui_helper::init_progress_bar};
+use std::error::Error;
 
 /**
  * Filter out machines with genres that are not relevant to arcade machines
  */
-pub fn filter_genres(machines: &mut HashMap<String, Machine>) -> Result<u64, Box<dyn Error>> {
+pub fn filter_genres() -> Result<u64, Box<dyn Error>> {
+    let mut machines = MACHINES.lock().unwrap();
     // List of genres to ignore
     let ignored_genres = vec![
         "Board Game",

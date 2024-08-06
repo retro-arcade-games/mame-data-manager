@@ -3,7 +3,7 @@ use std::{collections::HashMap, error::Error};
 use lazy_static::lazy_static;
 
 use crate::{
-    core::models::{CustomData, Machine},
+    core::{data::MACHINES, models::CustomData},
     helpers::ui_helper::init_progress_bar,
 };
 
@@ -35,7 +35,8 @@ lazy_static! {
 /**
  * Refactor the number of players field.
  */
-pub fn refactor_nplayers(machines: &mut HashMap<String, Machine>) -> Result<(), Box<dyn Error>> {
+pub fn refactor_nplayers() -> Result<(), Box<dyn Error>> {
+    let mut machines = MACHINES.lock().unwrap();
     let pb = init_progress_bar(machines.len() as u64, "machines in collection");
 
     let mut processed_count = 0;
