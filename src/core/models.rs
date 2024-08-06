@@ -81,4 +81,5 @@ pub struct HistorySection {
 #[derive(Debug, Serialize, Deserialize, Clone, Default)]
 pub struct CustomData {
     pub name: Option<String>,
+    pub manufacturer: Option<String>,
 }

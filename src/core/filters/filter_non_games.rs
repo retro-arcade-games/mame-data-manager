@@ -50,6 +50,7 @@ fn is_non_game_machine(machine: &Machine) -> bool {
         || machine.is_bios.unwrap_or(false)
         || machine.is_mechanical.unwrap_or(false)
         || is_modified_machine(&machine.description.as_ref().unwrap_or(&"".to_string()))
+        || has_invalid_manufacturer(machine)
 }
 
 /**
@@ -65,6 +66,28 @@ pub fn is_modified_machine(description: &str) -> bool {
     for keyword in modified_keywords {
         if description.to_lowercase().contains(&keyword.to_lowercase()) {
             return true;
+        }
+    }
+    false
+}
+
+/**
+ * Check if custom_data.manufacturer is invalid
+ */
+pub fn has_invalid_manufacturer(machine: &Machine) -> bool {
+    let invalid_manufacturers = vec!["unknown", "bootleg"];
+    // Check if machine has custom data
+    if let Some(custom_data) = &machine.custom_data {
+        // Check if manufacturer is invalid
+        if let Some(manufacturer) = &custom_data.manufacturer {
+            for invalid_manufacturer in invalid_manufacturers {
+                if manufacturer
+                    .to_lowercase()
+                    .contains(&invalid_manufacturer.to_lowercase())
+                {
+                    return true;
+                }
+            }
         }
     }
     false

@@ -39,6 +39,7 @@ fn create_database(conn: &Connection) -> Result<()> {
         "CREATE TABLE IF NOT EXISTS custom_data (
                   machine_name TEXT,
                   name TEXT,
+                  manufacturer TEXT,
                   FOREIGN KEY(machine_name) REFERENCES machine(name)
                   )",
         [],
@@ -156,8 +157,8 @@ fn insert_machine_data(transaction: &Transaction, machine: &Machine) -> Result<(
 
     if let Some(custom_data) = &machine.custom_data {
         transaction.execute(
-            "INSERT OR REPLACE INTO custom_data (machine_name, name) VALUES (?1, ?2)",
-            params![machine.name, custom_data.name],
+            "INSERT OR REPLACE INTO custom_data (machine_name, name, manufacturer) VALUES (?1, ?2, ?3)",
+            params![machine.name, custom_data.name, custom_data.manufacturer],
         )?;
     }
 
@@ -243,7 +244,6 @@ fn insert_machine_data(transaction: &Transaction, machine: &Machine) -> Result<(
  * Write the given machines data to the database.
  */
 pub fn write_machines(db_path: &str, machines: Arc<Mutex<HashMap<String, Machine>>>) -> Result<()> {
-
     if fs::metadata(db_path).is_ok() {
         let _ = fs::remove_file(db_path);
     }

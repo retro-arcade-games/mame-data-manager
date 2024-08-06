@@ -7,7 +7,7 @@ use helpers::fs_helper::{check_folder_structure, find_file_with_pattern, get_fil
 use num_format::{Locale, ToFormattedString};
 
 use core::data_types::{DataType, DATA_TYPES};
-use core::filters::{filter_genres, filter_non_games, name_refactor};
+use core::filters::{filter_genres, filter_non_games, manufacturer_refactor, name_refactor};
 use core::models::Machine;
 use core::writers::{db_writer, json_writer};
 use helpers::data_source_helper::get_data_source;
@@ -85,9 +85,10 @@ fn show_menu() -> Result<(), Box<dyn Error>> {
 fn show_filter_submenu() -> Result<(), Box<dyn Error>> {
     loop {
         let selections = &[
-            "Cleanup names",
+            "Refactor names",
             "Remove non game genres",
             "Remove non games",
+            "Refactor manufacturers",
             "Back",
         ];
         let selection = Select::with_theme(&ColorfulTheme::default())
@@ -101,7 +102,8 @@ fn show_filter_submenu() -> Result<(), Box<dyn Error>> {
             0 => refactor_names()?,
             1 => filter_genres()?,
             2 => filter_non_games()?,
-            3 => {
+            3 => refactor_manufacturers()?,
+            4 => {
                 break;
             }
             _ => unreachable!(),
@@ -170,6 +172,25 @@ fn filter_non_games() -> Result<(), Box<dyn Error>> {
         "{} machines removed in {}s",
         removed_machines?, rounded_secs
     );
+    print_step_message(&message, 1, 1, SUCCESS);
+
+    Ok(())
+}
+
+/**
+ * Refactor the manufacturers.
+ */
+fn refactor_manufacturers() -> Result<(), Box<dyn Error>> {
+    let message = format!("Refactoring manufacturers");
+    println_step_message(&message, 1, 1, WRITE);
+
+    let time = std::time::Instant::now();
+
+    let mut machines_guard = MACHINES.lock().unwrap();
+    let _ = manufacturer_refactor::refactor_manufacturers(&mut machines_guard);
+
+    let rounded_secs = (time.elapsed().as_secs_f32() * 10.0).round() / 10.0;
+    let message = format!("Manufacturers refactored in {}s", rounded_secs);
     print_step_message(&message, 1, 1, SUCCESS);
 
     Ok(())
