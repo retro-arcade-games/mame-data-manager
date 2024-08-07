@@ -49,8 +49,18 @@ fn create_database(conn: &mut Connection) -> Result<()> {
         [],
     )?;
 
+    // Languages table
     conn.execute(
         "CREATE TABLE IF NOT EXISTS languages (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL UNIQUE
+        )",
+        [],
+    )?;
+
+    // Players table
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS players (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT NOT NULL UNIQUE
         )",
@@ -92,6 +102,7 @@ fn create_database(conn: &mut Connection) -> Result<()> {
         [],
     )?;
 
+    // Machine languages table
     conn.execute(
         "CREATE TABLE IF NOT EXISTS machine_languages (
             machine_id INTEGER,
@@ -99,6 +110,18 @@ fn create_database(conn: &mut Connection) -> Result<()> {
             FOREIGN KEY(machine_id) REFERENCES machines(id),
             FOREIGN KEY(language_id) REFERENCES languages(id),
             PRIMARY KEY(machine_id, language_id)
+        )",
+        [],
+    )?;
+
+    // Machine players table
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS machine_players (
+            machine_id INTEGER,
+            player_id INTEGER,
+            FOREIGN KEY(machine_id) REFERENCES machines(id),
+            FOREIGN KEY(player_id) REFERENCES players(id),
+            PRIMARY KEY(machine_id, player_id)
         )",
         [],
     )?;
@@ -334,6 +357,9 @@ fn insert_machine_data(transaction: &Transaction, machine: &Machine) -> Result<(
     Ok(())
 }
 
+/**
+ * Extract and insert the languages from the machines data.
+ */
 fn extract_and_insert_languages(conn: &mut Connection) -> Result<()> {
     let unique_languages: HashSet<String> = {
         let mut stmt = conn.prepare("SELECT languages FROM machines")?;
@@ -352,7 +378,6 @@ fn extract_and_insert_languages(conn: &mut Connection) -> Result<()> {
         unique_languages
     };
 
-    // Insertar idiomas únicos en la tabla languages
     let tx = conn.transaction()?;
     {
         let mut insert_stmt = tx.prepare("INSERT OR IGNORE INTO languages (name) VALUES (?)")?;
@@ -365,6 +390,9 @@ fn extract_and_insert_languages(conn: &mut Connection) -> Result<()> {
     Ok(())
 }
 
+/**
+ * Insert the relationships between the machines and the languages.
+ */
 fn insert_machine_language_relationships(conn: &mut Connection) -> Result<()> {
     let machine_languages: Vec<(i64, String)> = {
         let mut stmt = conn.prepare("SELECT id, languages FROM machines")?;
@@ -376,7 +404,6 @@ fn insert_machine_language_relationships(conn: &mut Connection) -> Result<()> {
         machine_languages.collect::<Result<Vec<_>, _>>()?
     };
 
-    // Insertar relaciones en machine_languages
     let tx = conn.transaction()?;
     {
         let mut insert_stmt = tx.prepare(
@@ -386,6 +413,74 @@ fn insert_machine_language_relationships(conn: &mut Connection) -> Result<()> {
         for (machine_id, languages) in machine_languages {
             for language in languages.split(',').map(|s| s.trim()) {
                 insert_stmt.execute(params![machine_id, language])?;
+            }
+        }
+    }
+    tx.commit()?;
+
+    Ok(())
+}
+
+/**
+ * Extract and insert the players from the custom data.
+ */
+fn extract_and_insert_players(conn: &mut Connection) -> Result<()> {
+    let unique_players: HashSet<String> = {
+        let mut stmt = conn.prepare("SELECT players FROM custom_datas")?;
+        let custom_players = stmt.query_map([], |row| {
+            let players: String = row.get(0)?;
+            Ok(players)
+        })?;
+
+        let mut unique_players = HashSet::new();
+        for players_str in custom_players {
+            let players = players_str?;
+            for player in players.split(',').map(|s| s.trim()) {
+                unique_players.insert(player.to_string());
+            }
+        }
+        unique_players
+    };
+
+    let tx = conn.transaction()?;
+    {
+        let mut insert_stmt = tx.prepare("INSERT OR IGNORE INTO players (name) VALUES (?)")?;
+        for player in unique_players {
+            insert_stmt.execute([&player])?;
+        }
+    }
+    tx.commit()?;
+
+    Ok(())
+}
+
+/**
+ * Insert the relationships between the machines and the players.
+ */
+fn insert_machine_player_relationships(conn: &mut Connection) -> Result<()> {
+    let machine_players: Vec<(i64, String)> = {
+        let mut stmt = conn.prepare(
+            "SELECT machines.id, custom_datas.players
+             FROM machines
+             JOIN custom_datas ON machines.id = custom_datas.machine_id",
+        )?;
+        let machine_players = stmt.query_map([], |row| {
+            let machine_id: i64 = row.get(0)?;
+            let players: String = row.get(1)?;
+            Ok((machine_id, players))
+        })?;
+        machine_players.collect::<Result<Vec<_>, _>>()?
+    };
+
+    let tx = conn.transaction()?;
+    {
+        let mut insert_stmt = tx.prepare(
+            "INSERT INTO machine_players (machine_id, player_id)
+             VALUES (?, (SELECT id FROM players WHERE name = ?))",
+        )?;
+        for (machine_id, players) in machine_players {
+            for player in players.split(',').map(|s| s.trim()) {
+                insert_stmt.execute(params![machine_id, player])?;
             }
         }
     }
@@ -595,6 +690,10 @@ pub fn write_machines(db_path: &str) -> Result<()> {
     // Add languages relations
     extract_and_insert_languages(&mut conn)?;
     insert_machine_language_relationships(&mut conn)?;
+
+    // Add players relations
+    extract_and_insert_players(&mut conn)?;
+    insert_machine_player_relationships(&mut conn)?;
 
     pb.finish_and_clear();
 
