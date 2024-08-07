@@ -84,4 +84,5 @@ pub struct CustomData {
     pub manufacturer: Option<String>,
     pub players: Option<String>,
     pub is_parent: Option<bool>,
+    pub year: Option<String>,
 }
