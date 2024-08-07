@@ -53,13 +53,16 @@ pub fn read_languages_file(file_path: &str) -> Result<(), Box<dyn Error>> {
                 // Set the current language when a new language section starts
                 current_language = Some(line.replace("[", "").replace("]", ""));
             } else if let Some(language) = &current_language {
-                // Update the machine's languages if the line matches a machine name
-                if let Some(machine) = machines.get_mut(&line) {
-                    machine.languages.push(language.clone());
+                // If the current language has a slash don't add it to the machine
+                if !language.contains("/") {
+                    // Update the machine's languages if the line matches a machine name
+                    if let Some(machine) = machines.get_mut(&line) {
+                        machine.languages.push(language.clone());
 
-                    processed_count += 1;
-                    if processed_count % batch == 0 {
-                        pb.inc(batch);
+                        processed_count += 1;
+                        if processed_count % batch == 0 {
+                            pb.inc(batch);
+                        }
                     }
                 }
             }
