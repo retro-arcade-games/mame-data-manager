@@ -1,7 +1,6 @@
 use crate::core::readers::{
-    catver_reader::read_catver_file, history_reader::read_history_file,
-    languages_reader::read_languages_file, mame_reader::read_mame_file,
-    nplayers_reader::read_nplayers_file, series_reader::read_series_file,
+    catver_reader, history_reader, languages_reader, mame_reader, nplayers_reader,
+    resources_reader, series_reader,
 };
 use lazy_static::lazy_static;
 use regex::Regex;
@@ -29,7 +28,7 @@ lazy_static! {
             source_match: "download/?tipo=dat_mame&file=/dats/MAME/packs/MAME_Dats",
             zip_file_pattern: Regex::new(r"^MAME_Dats_\d+\.7z$").unwrap(),
             data_file_pattern: Regex::new(r"MAME\s+[0-9]*\.[0-9]+\.dat").unwrap(),
-            read_function: read_mame_file,
+            read_function: mame_reader::read_mame_file,
         },
         DataType {
             name: "Languages",
@@ -37,7 +36,7 @@ lazy_static! {
             source_match: "download",
             zip_file_pattern: Regex::new(r"^pS_Languages_\d+\.zip$").unwrap(),
             data_file_pattern: Regex::new(r"languages.ini").unwrap(),
-            read_function: read_languages_file,
+            read_function: languages_reader::read_languages_file,
         },
         DataType {
             name: "NPlayers",
@@ -45,7 +44,7 @@ lazy_static! {
             source_match: "files",
             zip_file_pattern: Regex::new(r"^nplayers0\d+\.zip$").unwrap(),
             data_file_pattern: Regex::new(r"nplayers.ini").unwrap(),
-            read_function: read_nplayers_file,
+            read_function: nplayers_reader::read_nplayers_file,
         },
         DataType {
             name: "Catver",
@@ -53,7 +52,7 @@ lazy_static! {
             source_match: "download",
             zip_file_pattern: Regex::new(r"^pS_CatVer_\d+\.zip$").unwrap(),
             data_file_pattern: Regex::new(r"catver.ini").unwrap(),
-            read_function: read_catver_file,
+            read_function: catver_reader::read_catver_file,
         },
         DataType {
             name: "Series",
@@ -61,7 +60,7 @@ lazy_static! {
             source_match: "download",
             zip_file_pattern: Regex::new(r"^pS_Series_\d+\.zip$").unwrap(),
             data_file_pattern: Regex::new(r"series.ini").unwrap(),
-            read_function: read_series_file,
+            read_function: series_reader::read_series_file,
         },
         DataType {
             name: "History",
@@ -69,7 +68,15 @@ lazy_static! {
             source_match: "dats",
             zip_file_pattern: Regex::new(r"^history\d+\.zip$").unwrap(),
             data_file_pattern: Regex::new(r"history.xml").unwrap(),
-            read_function: read_history_file,
+            read_function: history_reader::read_history_file,
         },
+        DataType {
+            name: "Resources",
+            source: "https://www.progettosnaps.net/dats",
+            source_match: "download/?tipo=dat_resource&file=/dats/cmdats/pS_AllProject_",
+            zip_file_pattern: Regex::new(r"^pS_AllProject_\d{8}_\d+_\([a-zA-Z]+\)\.zip$").unwrap(),
+            data_file_pattern: Regex::new(r"^pS_AllProject_\d{8}_\d+_\([a-zA-Z]+\)\.dat$").unwrap(),
+            read_function: resources_reader::read_resources_file,
+        }
     ];
 }

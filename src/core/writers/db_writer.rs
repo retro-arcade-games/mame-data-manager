@@ -238,6 +238,22 @@ fn create_database(conn: &mut Connection) -> Result<()> {
         [],
     )?;
 
+    // Resources table
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS resources (
+                  id INTEGER PRIMARY KEY AUTOINCREMENT,
+                  machine_name TEXT,
+                  type TEXT,
+                  name TEXT,
+                  size INTEGER,
+                  crc TEXT,
+                  sha1 TEXT,
+                  machine_id INTEGER,
+                  FOREIGN KEY(machine_id) REFERENCES machines(id)
+                  )",
+        [],
+    )?;
+
     Ok(())
 }
 
@@ -351,6 +367,22 @@ fn insert_machine_data(transaction: &Transaction, machine: &Machine) -> Result<(
                 history_section.name,
                 history_section.text,
                 history_section.order
+            ],
+        )?;
+    }
+
+    for resource in &machine.resources {
+        transaction.execute(
+            "INSERT OR REPLACE INTO resources (
+                      machine_name, type, name, size, crc, sha1
+                      ) VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
+            params![
+                machine.name,
+                resource.type_,
+                resource.name,
+                resource.size,
+                resource.crc,
+                resource.sha1
             ],
         )?;
     }
@@ -631,6 +663,16 @@ fn create_relations(conn: &Connection) -> Result<()> {
              SELECT id
              FROM machines
              WHERE machines.name = history_sections.machine_name
+         )",
+        [],
+    )?;
+    // Update resources with machine_id
+    conn.execute(
+        "UPDATE resources
+         SET machine_id = (
+             SELECT id
+             FROM machines
+             WHERE machines.name = resources.machine_name
          )",
         [],
     )?;

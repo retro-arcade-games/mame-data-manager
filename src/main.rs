@@ -261,7 +261,7 @@ fn download_data_file(data_type: &DataType, count: usize) -> Result<(), Box<dyn 
         let file_path = format!("{}{}", PATHS.download_path, file_name);
 
         if !Path::new(&file_path).exists() {
-            let message = format!("Downloading {}...", source_url);
+            let message = format!("Downloading {} from {}", style(file_name.clone()).cyan(), data_type.source);
             print_step_message(&message, count, DATA_TYPES.len(), DOWNLOAD);
 
             download_file(&source_url, &file_path)?;

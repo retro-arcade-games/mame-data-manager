@@ -157,6 +157,7 @@ fn process_node(
                 history_sections: vec![],
                 disks: vec![],
                 custom_data: None,
+                resources: vec![],
             };
             let attrs = e.attributes().map(|a| a.unwrap());
             for attr in attrs {

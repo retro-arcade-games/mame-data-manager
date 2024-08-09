@@ -29,6 +29,7 @@ pub struct Machine {
     pub history_sections: Vec<HistorySection>,
     pub disks: Vec<Disk>,
     pub custom_data: Option<CustomData>,
+    pub resources: Vec<Resource>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -85,4 +86,13 @@ pub struct CustomData {
     pub players: Option<String>,
     pub is_parent: Option<bool>,
     pub year: Option<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct Resource {
+    pub type_: String,
+    pub name: String,
+    pub size: u64,
+    pub crc: String,
+    pub sha1: String,
 }
