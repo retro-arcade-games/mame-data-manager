@@ -1,13 +1,10 @@
-
 use dialoguer::{theme::ColorfulTheme, Select};
 
 use crate::core::filters::{
     filter_genres, filter_non_games, manufacturer_refactor, name_refactor, nplayers_refactor,
 };
 
-use crate::helpers::ui_helper::{
-    icons::*, print_step_message, println_step_message,
-};
+use crate::helpers::ui_helper::{icons::*, print_step_message, println_step_message};
 
 use std::error::Error;
 
@@ -22,7 +19,7 @@ pub fn show_filtering_submenu() -> Result<(), Box<dyn Error>> {
             "Remove non games",
             "Refactor manufacturers",
             "Refactor players",
-            "Back",
+            "< Back",
         ];
         let selection = Select::with_theme(&ColorfulTheme::default())
             .with_prompt("Choose an option")
