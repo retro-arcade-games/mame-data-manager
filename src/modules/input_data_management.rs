@@ -1,5 +1,5 @@
 use crate::{
-    core::data_types::{DataType, DATA_TYPES},
+    core::data_types::DATA_TYPES,
     helpers::{
         data_source_helper::get_data_source,
         file_download_helper::download_file,
@@ -46,44 +46,35 @@ fn download_files() -> Result<(), Box<dyn Error>> {
 
     for data_type in DATA_TYPES.iter() {
         count += 1;
-        download_data_file(data_type, count)?;
-        println!("")
-    }
+        let message = format!("Getting URL for {}...", data_type.name);
+        println_step_message(&message, count, DATA_TYPES.len(), DOWNLOAD);
 
-    Ok(())
-}
+        if let Ok(source_url) = get_data_source(data_type.source, data_type.source_match) {
+            let file_name = get_file_name(&source_url);
+            let file_path = format!("{}{}", PATHS.download_path, file_name);
 
-/**
- * Download the data file.
- */
-fn download_data_file(data_type: &DataType, count: usize) -> Result<(), Box<dyn Error>> {
-    let message = format!("Getting URL for {}...", data_type.name);
-    print_step_message(&message, count, DATA_TYPES.len(), DOWNLOAD);
+            if !Path::new(&file_path).exists() {
+                let message = format!(
+                    "Downloading {} from {}",
+                    style(file_name.clone()).cyan(),
+                    data_type.source
+                );
+                print_step_message(&message, count, DATA_TYPES.len(), DOWNLOAD);
 
-    if let Ok(source_url) = get_data_source(data_type.source, data_type.source_match) {
-        let file_name = get_file_name(&source_url);
-        let file_path = format!("{}{}", PATHS.download_path, file_name);
+                download_file(&source_url, &file_path)?;
 
-        if !Path::new(&file_path).exists() {
-            let message = format!(
-                "Downloading {} from {}",
-                style(file_name.clone()).cyan(),
-                data_type.source
-            );
-            print_step_message(&message, count, DATA_TYPES.len(), DOWNLOAD);
-
-            download_file(&source_url, &file_path)?;
-
-            let message = format!("{} downloaded successfully", style(file_name).cyan());
-            print_step_message(&message, count, DATA_TYPES.len(), SUCCESS);
+                let message = format!("{} downloaded successfully", style(file_name).cyan());
+                print_step_message(&message, count, DATA_TYPES.len(), SUCCESS);
+            } else {
+                let message = format!("{} already exists (skipped)", style(file_name).cyan());
+                print_step_message(&message, count, DATA_TYPES.len(), INFO);
+            }
         } else {
-            let message = format!("{} already exists (skipped)", style(file_name).cyan());
-            print_step_message(&message, count, DATA_TYPES.len(), INFO);
+            let message = format!("Failed getting matching source for {}", data_type.name);
+            print_step_message(&message, count, DATA_TYPES.len(), ERROR);
         }
-    } else {
-        let message = format!("Failed getting matching source for {}", data_type.name);
-        print_step_message(&message, count, DATA_TYPES.len(), ERROR);
     }
+
     Ok(())
 }
 
@@ -113,45 +104,28 @@ fn extract_files() -> Result<(), Box<dyn Error>> {
             continue;
         }
 
-        let mut continue_extraction = false;
-        let mut file_name: Option<String> = None;
+        // Check if the zip file is present
+        if let Some(zip_file_path) =
+            find_file_with_pattern(&PATHS.download_path, &data_type.zip_file_pattern)
+        {
+            let zip_file = zip_file_path.split('/').last().unwrap();
 
-        // If zip file is not present then download it and extract it
-        while !continue_extraction {
-            file_name =
-                match find_file_with_pattern(&PATHS.download_path, &data_type.zip_file_pattern) {
-                    Some(path) => {
-                        let file_name = path.split('/').last().unwrap().to_owned();
-                        continue_extraction = true;
-                        Some(file_name)
-                    }
-                    None => {
-                        download_data_file(data_type, count)?;
-                        None
-                    }
-                };
-        }
-
-        let file_name = file_name.unwrap();
-
-        // Get the file path
-        let file_path = format!("{}{}", PATHS.download_path, file_name);
-
-        // Check if the file exists
-        if Path::new(&file_path).exists() {
             let message = format!(
                 "Extracting {} to {}",
-                style(file_name.clone()).cyan(),
+                style(zip_file).cyan(),
                 extracted_folder
             );
             print_step_message(&message, count, DATA_TYPES.len(), FOLDER);
 
-            extract_file(&file_path, &extracted_folder)?;
+            extract_file(&zip_file_path, &extracted_folder)?;
 
-            let message = format!("{} extracted successfully", style(file_name).cyan());
+            let message = format!("{} extracted successfully", style(zip_file).cyan());
             print_step_message(&message, count, DATA_TYPES.len(), SUCCESS);
         } else {
-            let message = format!("File for {} not found", data_type.name);
+            let message = format!(
+                "File for {} not found, please download first",
+                data_type.name
+            );
             print_step_message(&message, count, DATA_TYPES.len(), ERROR);
         }
     }
