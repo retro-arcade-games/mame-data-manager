@@ -7,6 +7,7 @@
   <a href="#why">Why</a> •
   <a href="#running-the-application">Running the Application</a> •
   <a href="#how-to-use">How to Use</a> •
+  <a href="#documentation">Documentation</a> •
   <a href="#credits">Credits</a> •
   <a href="#contribute">Contribute</a> •
   <a href="#license">License</a>
@@ -80,6 +81,10 @@ TODO
 
 Simply follow the on-screen instructions to perform the desired actions.
 
+## Documentation
+
+More detailed documentation about the project can be found [here](./docs/README.md)
+
 ## Credits
 
 MAME Data Manager wouldn't be possible without the invaluable contributions and resources provided by the following individuals and communities:
@@ -94,7 +99,7 @@ MAME Data Manager wouldn't be possible without the invaluable contributions and 
 
 - **NPlayers Team**: The [NPlayers](https://nplayers.arcadebelgium.be) project by Arcade Belgium is a fantastic resource for information on multiplayer arcade games.
 
-- **zombiesbyte and XMLTractor**: Special thanks to zombiesbyte for [XMLTractor](https://github.com/zombiesbyte/xmltractor) project.
+- **@zombiesbyte and XMLTractor**: Special thanks to zombiesbyte for [XMLTractor](https://github.com/zombiesbyte/xmltractor) project.
 
 ## Contribute
 

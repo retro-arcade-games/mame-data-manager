@@ -6,7 +6,7 @@ use std::io::{BufRead, BufReader};
 
 /**
  * The `catver.ini` file represents configurations and data related to game classification in the MAME system.
- * The file is organized into lines, where each line corresponds to a game entry with its genre and subgenre.
+ * The file is organized into lines, where each line corresponds to a game entry with its category and subcategory.
  *
  * The file structure is as follows:
  *
@@ -16,16 +16,16 @@ use std::io::{BufRead, BufReader};
  *
  * - `[ROOT_FOLDER]`: A placeholder section for root folder configurations (may be empty).
  *
- * - `<ROM Name>=<Genre> / <Subgenre> * Mature *`
+ * - `<ROM Name>=<Category> / <Subcategory> * Mature *`
  *   - `<ROM Name>`: The name of the ROM being configured.
- *   - `<Genre>`: The genre of the game.
- *   - `<Subgenre>`: The subgenre of the game, which may be followed by `* Mature *` if the game is marked as mature.
+ *   - `<Category>`: The category of the game.
+ *   - `<Subcategory>`: The subcategory of the game, which may be followed by `* Mature *` if the game is marked as mature.
  *
- * Note: The `genre` and `subgenre` are separated by ` / `, and the subgenre may or may not end with the `* Mature *` marker.
+ * Note: The `category` and `subcategory` are separated by ` / `, and the subcategory may or may not end with the `* Mature *` marker.
  */
 
 /**
- * Read the catver.ini file and update the machines with the genre, subgenre, and is_mature values.
+ * Read the catver.ini file and update the machines with the category, subcategory, and is_mature values.
  */
 pub fn read_catver_file(file_path: &str) -> Result<(), Box<dyn Error>> {
     let mut machines = MACHINES.lock().unwrap();

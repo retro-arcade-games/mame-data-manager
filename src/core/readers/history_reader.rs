@@ -24,16 +24,16 @@ use std::io::BufReader;
  *
  *     <text>
  *         <!-- Contains various sections of text about the game. The possible sections are: -->
- *         <!-- - DESCRIPTION: Provides a general description of the game. -->
- *         <!-- - TECHNICAL: Details technical aspects or specifications of the game. -->
- *         <!-- - TRIVIA: Contains trivia or interesting facts about the game. -->
- *         <!-- - UPDATES: Lists updates or changes made to the game. -->
- *         <!-- - SCORING: Details on scoring or how the game is scored. -->
- *         <!-- - TIPS AND TRICKS: Offers tips and tricks for playing the game. -->
- *         <!-- - SERIES: Information about the game series or franchise. -->
- *         <!-- - STAFF: Lists the staff or developers involved with the game. -->
- *         <!-- - PORTS: Details on different ports or versions of the game. -->
- *         <!-- - CONTRIBUTE: Information on how to contribute or support the game. -->
+ *         <!-- DESCRIPTION: Provides a general description of the game. -->
+ *         <!-- TECHNICAL: Details technical aspects or specifications of the game. -->
+ *         <!-- TRIVIA: Contains trivia or interesting facts about the game. -->
+ *         <!-- UPDATES: Lists updates or changes made to the game. -->
+ *         <!-- SCORING: Details on scoring or how the game is scored. -->
+ *         <!-- TIPS AND TRICKS: Offers tips and tricks for playing the game. -->
+ *         <!-- SERIES: Information about the game series or franchise. -->
+ *         <!-- STAFF: Lists the staff or developers involved with the game. -->
+ *         <!-- PORTS: Details on different ports or versions of the game. -->
+ *         <!-- CONTRIBUTE: Information on how to contribute or support the game. -->
  *     </text>
  * </entry>
  */
