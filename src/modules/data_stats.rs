@@ -46,8 +46,8 @@ fn show_stats() -> Result<(), Box<dyn Error>> {
     let total_manufacturers = unique_manufacturers.len();
     let unique_series: HashSet<_> = machines.iter().map(|m| &m.series).collect();
     let total_series = unique_series.len();
-    let unique_genres = machines.iter().map(|m| &m.genre).collect::<HashSet<_>>();
-    let total_genres = unique_genres.len();
+    let unique_categories = machines.iter().map(|m| &m.category).collect::<HashSet<_>>();
+    let total_categories = unique_categories.len();
     let total_machines_with_history = machines
         .iter()
         .filter(|m| m.history_sections.len() > 0)
@@ -64,7 +64,7 @@ fn show_stats() -> Result<(), Box<dyn Error>> {
     table.add_row(row!["Clones", r -> total_clones.to_formatted_string(&Locale::en)]);
     table.add_row(row!["Manufacturers", r -> total_manufacturers.to_formatted_string(&Locale::en)]);
     table.add_row(row!["Series", r -> total_series.to_formatted_string(&Locale::en)]);
-    table.add_row(row!["Genres", r -> total_genres.to_formatted_string(&Locale::en)]);
+    table.add_row(row!["Categories", r -> total_categories.to_formatted_string(&Locale::en)]);
     table.add_row(row!["Machines with history", r -> total_machines_with_history.to_formatted_string(&Locale::en)]);
 
     table.printstd();

@@ -19,23 +19,23 @@ fn create_database(conn: &mut Connection) -> Result<()> {
         [],
     )?;
 
-    // Genres table
+    // Categories table
     conn.execute(
-        "CREATE TABLE IF NOT EXISTS genres (
+        "CREATE TABLE IF NOT EXISTS categories (
              id INTEGER PRIMARY KEY AUTOINCREMENT,
              name TEXT NOT NULL UNIQUE
          )",
         [],
     )?;
 
-    // Subgenres table
+    // Subcategories table
     conn.execute(
-        "CREATE TABLE IF NOT EXISTS subgenres (
+        "CREATE TABLE IF NOT EXISTS subcategories (
              id INTEGER PRIMARY KEY AUTOINCREMENT,
              name TEXT NOT NULL,
-             genre_id INTEGER,
-             UNIQUE(name, genre_id),
-             FOREIGN KEY (genre_id) REFERENCES genres(id)
+             category_id INTEGER,
+             UNIQUE(name, category_id),
+             FOREIGN KEY (category_id) REFERENCES categories(id)
          )",
         [],
     )?;
@@ -86,16 +86,16 @@ fn create_database(conn: &mut Connection) -> Result<()> {
                   driver_status TEXT,
                   players TEXT,
                   series TEXT,
-                  genre TEXT,
-                  subgenre TEXT,
+                  category TEXT,
+                  subcategory TEXT,
                   is_mature INTEGER,
                   languages TEXT,
-                  genre_id INTEGER,
-                  subgenre_id INTEGER,
+                  category_id INTEGER,
+                  subcategory_id INTEGER,
                   series_id INTEGER,
                   manufacturer_id INTEGER,
-                  FOREIGN KEY (genre_id) REFERENCES genres(id),
-                  FOREIGN KEY (subgenre_id) REFERENCES subgenres(id),
+                  FOREIGN KEY (category_id) REFERENCES categories(id),
+                  FOREIGN KEY (subcategory_id) REFERENCES subcategories(id),
                   FOREIGN KEY (series_id) REFERENCES series(id)
                   FOREIGN KEY (manufacturer_id) REFERENCES manufacturers(id)
                   )",
@@ -264,7 +264,7 @@ fn insert_machine_data(transaction: &Transaction, machine: &Machine) -> Result<(
     transaction.execute(
         "INSERT OR REPLACE INTO machines (
                   name, source_file, rom_of, clone_of, is_bios, is_device, runnable, is_mechanical, sample_of,
-                  description, year, manufacturer, driver_status, players, series, genre, subgenre, is_mature, languages
+                  description, year, manufacturer, driver_status, players, series, category, subcategory, is_mature, languages
                   ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19)",
         params![
             machine.name,
@@ -282,8 +282,8 @@ fn insert_machine_data(transaction: &Transaction, machine: &Machine) -> Result<(
             machine.driver_status,
             machine.players,
             machine.series,
-            machine.genre,
-            machine.subgenre,
+            machine.category,
+            machine.subcategory,
             machine.is_mature,
             machine.languages.join(", ")
         ],
@@ -526,34 +526,34 @@ fn insert_machine_player_relationships(conn: &mut Connection) -> Result<()> {
  * Create the relations between the machines and other entities.
  */
 fn create_relations(conn: &Connection) -> Result<()> {
-    // Add genres
+    // Add categories
     conn.execute(
-        "INSERT OR IGNORE INTO genres (name)
-         SELECT DISTINCT genre FROM machines WHERE genre IS NOT NULL",
+        "INSERT OR IGNORE INTO categories (name)
+         SELECT DISTINCT category FROM machines WHERE category IS NOT NULL",
         [],
     )?;
-    // Update machines with genre_id
+    // Update machines with category_id
     conn.execute(
         "UPDATE machines
-         SET genre_id = (SELECT id FROM genres WHERE genres.name = machines.genre)",
+         SET category_id = (SELECT id FROM categories WHERE categories.name = machines.category)",
         [],
     )?;
-    // Add subgenres (must be executed after updating machines with genre_id)
+    // Add subcategories (must be executed after updating machines with category_id)
     conn.execute(
-        "INSERT OR IGNORE INTO subgenres (name, genre_id)
-         SELECT DISTINCT subgenre, genre_id
+        "INSERT OR IGNORE INTO subcategories (name, category_id)
+         SELECT DISTINCT subcategory, category_id
          FROM machines
-         WHERE subgenre IS NOT NULL",
+         WHERE subcategory IS NOT NULL",
         [],
     )?;
-    // Update machines with subgenre_id
+    // Update machines with subcategory_id
     conn.execute(
         "UPDATE machines
-         SET subgenre_id = (
+         SET subcategory_id = (
              SELECT id
-             FROM subgenres
-             WHERE subgenres.name = machines.subgenre
-               AND subgenres.genre_id = machines.genre_id
+             FROM subcategories
+             WHERE subcategories.name = machines.subcategory
+               AND subcategories.category_id = machines.category_id
          )",
         [],
     )?;

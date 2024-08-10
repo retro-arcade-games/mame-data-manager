@@ -2,12 +2,12 @@ use crate::{core::data::MACHINES, helpers::ui_helper::init_progress_bar};
 use std::error::Error;
 
 /**
- * Filter out machines with genres that are not relevant to arcade machines
+ * Filter out machines with categories that are not relevant to arcade machines
  */
-pub fn filter_genres() -> Result<u64, Box<dyn Error>> {
+pub fn filter_categories() -> Result<u64, Box<dyn Error>> {
     let mut machines = MACHINES.lock().unwrap();
-    // List of genres to ignore
-    let ignored_genres = vec![
+    // List of categories to ignore
+    let ignored_categories = vec![
         "Board Game",
         "Calculator",
         "Card Games",
@@ -58,15 +58,15 @@ pub fn filter_genres() -> Result<u64, Box<dyn Error>> {
 
     // Iterate the machines hashmap
     for (_, machine) in machines.iter_mut() {
-        // Check if machine has an ignored category from the ignored_genres list
-        if machine.genre.is_none() {
+        // Check if machine has an ignored category from the ignored_categories list
+        if machine.category.is_none() {
             // Remove machine from collection
             machines_to_remove.push(machine.name.clone());
             removed_machine_count += 1;
             continue;
         }
-        let category = machine.genre.as_ref().unwrap();
-        if ignored_genres.contains(&category.as_str()) {
+        let category = machine.category.as_ref().unwrap();
+        if ignored_categories.contains(&category.as_str()) {
             // Remove machine from collection
             machines_to_remove.push(machine.name.clone());
             removed_machine_count += 1;

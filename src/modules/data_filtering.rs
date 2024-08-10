@@ -1,7 +1,7 @@
 use dialoguer::{theme::ColorfulTheme, Select};
 
 use crate::core::filters::{
-    filter_genres, filter_non_games, manufacturer_refactor, name_refactor, nplayers_refactor,
+    filter_categories, filter_non_games, manufacturer_refactor, name_refactor, nplayers_refactor,
 };
 
 use crate::helpers::ui_helper::{icons::*, print_step_message, println_step_message};
@@ -15,7 +15,7 @@ pub fn show_filtering_submenu() -> Result<(), Box<dyn Error>> {
     loop {
         let selections = &[
             "Refactor names",
-            "Remove non game genres",
+            "Remove non game categories",
             "Remove non games",
             "Refactor manufacturers",
             "Refactor players",
@@ -29,7 +29,7 @@ pub fn show_filtering_submenu() -> Result<(), Box<dyn Error>> {
 
         match selection {
             0 => refactor_names()?,
-            1 => filter_genres()?,
+            1 => filter_categories()?,
             2 => filter_non_games()?,
             3 => refactor_manufacturers()?,
             4 => refactor_nplayers()?,
@@ -64,13 +64,13 @@ fn refactor_names() -> Result<(), Box<dyn Error>> {
 /**
  * Filter the categories.
  */
-fn filter_genres() -> Result<(), Box<dyn Error>> {
-    let message = format!("Removing non game machines by genre");
+fn filter_categories() -> Result<(), Box<dyn Error>> {
+    let message = format!("Removing non game machines by category");
     println_step_message(&message, 1, 1, WRITE);
 
     let time = std::time::Instant::now();
 
-    let removed_machines = filter_genres::filter_genres();
+    let removed_machines = filter_categories::filter_categories();
 
     let rounded_secs = (time.elapsed().as_secs_f32() * 10.0).round() / 10.0;
     let message = format!(

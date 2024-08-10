@@ -56,17 +56,20 @@ pub fn read_catver_file(file_path: &str) -> Result<(), Box<dyn Error>> {
 
             let parts: Vec<&str> = value.split(" / ").collect();
             if parts.len() >= 2 {
-                let genre = parts[0].to_string();
-                let mut subgenre = parts[1].to_string();
-                let is_mature = subgenre.ends_with(" * Mature *");
+                let category = parts[0].to_string();
+                let mut subcategory = parts[1].to_string();
+                let is_mature = subcategory.ends_with(" * Mature *");
 
                 if is_mature {
-                    subgenre = subgenre.trim_end_matches(" * Mature *").trim().to_string();
+                    subcategory = subcategory
+                        .trim_end_matches(" * Mature *")
+                        .trim()
+                        .to_string();
                 }
 
                 if let Some(machine) = machines.get_mut(rom_name) {
-                    machine.genre = Some(genre);
-                    machine.subgenre = Some(subgenre);
+                    machine.category = Some(category);
+                    machine.subcategory = Some(subcategory);
                     machine.is_mature = Some(is_mature);
                 }
             }
