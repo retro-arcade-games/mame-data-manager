@@ -14,8 +14,8 @@ use std::io::BufReader;
  *
  * - `Machine`: Represents a resource group associated with a specific machine:
  *   - `name`: The unique identifier for the machine or resource group (attribute).
- *     - Possible values include: `artpreview`, `bosses`, `cabinets`, `covers`, `cpanel`, `devices`, 
- *       `ends`, `flyers`, `gameover`, `howto`, `icons`, `logo`, `manuals`, `marquees`, `pcb`, 
+ *     - Possible values include: `artpreview`, `bosses`, `cabinets`, `covers`, `cpanel`, `devices`,
+ *       `ends`, `flyers`, `gameover`, `howto`, `icons`, `logo`, `manuals`, `marquees`, `pcb`,
  *       `scores`, `select`, `snap`, `titles`, `versus`, `videosnaps`, `warning`.
  *
  *   - `description`: A textual description of the resource group (child node).
@@ -105,12 +105,12 @@ fn process_node(
                     _ => {}
                 }
             }
-            
+
             *current_section = section_name;
         }
         b"rom" => {
             let mut resource = Resource {
-                type_:String::new(),
+                type_: String::new(),
                 name: String::new(),
                 size: 0,
                 crc: String::new(),
@@ -124,7 +124,7 @@ fn process_node(
                         resource.size = attr.unescape_and_decode_value(reader)?.parse().unwrap_or(0)
                     }
                     b"crc" => resource.crc = attr.unescape_and_decode_value(reader)?,
-                    b"sha1" => resource.sha1 =attr.unescape_and_decode_value(reader)?,
+                    b"sha1" => resource.sha1 = attr.unescape_and_decode_value(reader)?,
                     _ => {}
                 }
             }
@@ -146,7 +146,7 @@ fn process_node(
                     if let Some(machine) = MACHINES.lock().unwrap().get_mut(machine_name) {
                         resource.type_ = section_name.clone();
                         machine.resources.push(resource);
-                    }    
+                    }
                 }
             }
         }

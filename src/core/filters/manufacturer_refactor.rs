@@ -24,6 +24,10 @@ pub fn refactor_manufacturers() -> Result<(), Box<dyn Error>> {
 
     // Iterate the machines hashmap
     for (_, machine) in machines.iter_mut() {
+        // Check if the manufacturer is empty
+        if machine.manufacturer.is_none() {
+            continue;
+        }
         // Refactor the machine name
         let refactored_manufacturer = refactor_manufacturer(&machine.manufacturer);
         // Assign the refactored name to the machine in custom data
