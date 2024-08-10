@@ -14,11 +14,10 @@ use std::{error::Error, path::Path};
 /**
  * Show the filter submenu.
  */
-pub fn show_input_data_submenu() -> Result<(), Box<dyn Error>> {
+pub fn show_import_submenu() -> Result<(), Box<dyn Error>> {
     loop {
         let selections = &["Download files", "Extract files", "Read files", "< Back"];
         let selection = Select::with_theme(&ColorfulTheme::default())
-            .with_prompt("Choose an option")
             .default(0)
             .items(&selections[..])
             .interact()
