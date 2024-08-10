@@ -87,6 +87,13 @@ pub fn show_title() {
 }
 
 /**
+ * Show a section.
+ */
+pub fn show_section(section: &str) {
+    println!("-- {} --", style(section).bold());
+}
+
+/**
  * Clean the last line.
  */
 fn clean_last_line() -> Result<(), io::Error> {

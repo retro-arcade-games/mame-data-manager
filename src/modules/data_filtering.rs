@@ -1,7 +1,7 @@
 use crate::core::filters::{
     filter_categories, filter_non_games, manufacturer_refactor, name_refactor, nplayers_refactor,
 };
-use crate::helpers::ui_helper::{icons::*, print_step_message, println_step_message};
+use crate::helpers::ui_helper::{icons::*, print_step_message, println_step_message, show_section};
 use dialoguer::{theme::ColorfulTheme, Select};
 use std::error::Error;
 
@@ -44,6 +44,8 @@ pub fn show_filtering_submenu() -> Result<(), Box<dyn Error>> {
  * Refactor the names.
  */
 fn refactor_names() -> Result<(), Box<dyn Error>> {
+    show_section("Refactor machine names");
+
     let message = format!("Refactoring machine names");
     println_step_message(&message, 1, 1, WRITE);
 
@@ -54,7 +56,7 @@ fn refactor_names() -> Result<(), Box<dyn Error>> {
     let rounded_secs = (time.elapsed().as_secs_f32() * 10.0).round() / 10.0;
     let message = format!("Machine names refactored in {}s", rounded_secs);
     print_step_message(&message, 1, 1, SUCCESS);
-
+    println!();
     Ok(())
 }
 
@@ -62,6 +64,9 @@ fn refactor_names() -> Result<(), Box<dyn Error>> {
  * Filter the categories.
  */
 fn filter_categories() -> Result<(), Box<dyn Error>> {
+
+    show_section("Remove non game machines by category");
+
     let message = format!("Removing non game machines by category");
     println_step_message(&message, 1, 1, WRITE);
 
@@ -75,7 +80,7 @@ fn filter_categories() -> Result<(), Box<dyn Error>> {
         removed_machines?, rounded_secs
     );
     print_step_message(&message, 1, 1, SUCCESS);
-
+    println!();
     Ok(())
 }
 
@@ -83,6 +88,9 @@ fn filter_categories() -> Result<(), Box<dyn Error>> {
  * Filter the non games.
  */
 fn filter_non_games() -> Result<(), Box<dyn Error>> {
+
+    show_section("Remove non game machines");
+
     let message = format!("Removing non game machines");
     println_step_message(&message, 1, 1, WRITE);
 
@@ -96,7 +104,7 @@ fn filter_non_games() -> Result<(), Box<dyn Error>> {
         removed_machines?, rounded_secs
     );
     print_step_message(&message, 1, 1, SUCCESS);
-
+    println!("");
     Ok(())
 }
 
@@ -104,6 +112,9 @@ fn filter_non_games() -> Result<(), Box<dyn Error>> {
  * Refactor the manufacturers.
  */
 fn refactor_manufacturers() -> Result<(), Box<dyn Error>> {
+    
+    show_section("Refactor manufacturers");
+
     let message = format!("Refactoring manufacturers");
     println_step_message(&message, 1, 1, WRITE);
 
@@ -114,7 +125,7 @@ fn refactor_manufacturers() -> Result<(), Box<dyn Error>> {
     let rounded_secs = (time.elapsed().as_secs_f32() * 10.0).round() / 10.0;
     let message = format!("Manufacturers refactored in {}s", rounded_secs);
     print_step_message(&message, 1, 1, SUCCESS);
-
+    println!("");
     Ok(())
 }
 
@@ -122,6 +133,9 @@ fn refactor_manufacturers() -> Result<(), Box<dyn Error>> {
  * Refactor the number of players.
  */
 fn refactor_nplayers() -> Result<(), Box<dyn Error>> {
+
+    show_section("Refactor number of players");
+
     let message = format!("Refactoring number of players");
     println_step_message(&message, 1, 1, WRITE);
 
@@ -132,6 +146,6 @@ fn refactor_nplayers() -> Result<(), Box<dyn Error>> {
     let rounded_secs = (time.elapsed().as_secs_f32() * 10.0).round() / 10.0;
     let message = format!("Number of players refactored in {}s", rounded_secs);
     print_step_message(&message, 1, 1, SUCCESS);
-
+    println!("");
     Ok(())
 }

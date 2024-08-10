@@ -1,6 +1,6 @@
 use crate::core::writers::{db_writer, json_writer};
 use crate::helpers::fs_helper::PATHS;
-use crate::helpers::ui_helper::{icons::*, print_step_message, println_step_message};
+use crate::helpers::ui_helper::{icons::*, print_step_message, println_step_message, show_section};
 use dialoguer::{console::style, theme::ColorfulTheme, Select};
 use std::error::Error;
 
@@ -33,6 +33,9 @@ pub fn show_export_submenu() -> Result<(), Box<dyn Error>> {
  * Create the SQLite database.
  */
 fn export_sqlite() -> Result<(), Box<dyn Error>> {
+
+    show_section("Export to SQLite");
+
     let data_base_path = format!("{}{}", PATHS.export_path, "machines.db");
 
     let time = std::time::Instant::now();
@@ -46,6 +49,8 @@ fn export_sqlite() -> Result<(), Box<dyn Error>> {
     let message = format!("Database created in {}s", rounded_secs);
     print_step_message(&message, 1, 1, SUCCESS);
 
+    println!();
+
     Ok(())
 }
 
@@ -53,6 +58,9 @@ fn export_sqlite() -> Result<(), Box<dyn Error>> {
  * Create the JSON file.
  */
 fn export_json() -> Result<(), Box<dyn Error>> {
+
+    show_section("Export to JSON");
+
     let json_base_path = format!("{}{}", PATHS.export_path, "machines.json");
 
     let time = std::time::Instant::now();
@@ -65,6 +73,8 @@ fn export_json() -> Result<(), Box<dyn Error>> {
     let rounded_secs = (time.elapsed().as_secs_f32() * 10.0).round() / 10.0;
     let message = format!("JSON file created in {}s", rounded_secs);
     print_step_message(&message, 1, 1, SUCCESS);
+
+    println!();
 
     Ok(())
 }

@@ -1,4 +1,5 @@
 use crate::core::data_types::DATA_TYPES;
+use crate::helpers::ui_helper::show_section;
 use crate::helpers::{
     data_source_helper::get_data_source,
     file_download_helper::download_file,
@@ -39,6 +40,9 @@ pub fn show_import_submenu() -> Result<(), Box<dyn Error>> {
  * Download the files from the data sources.
  */
 fn download_files() -> Result<(), Box<dyn Error>> {
+
+    show_section("Download Files");
+
     let mut count = 0;
 
     for data_type in DATA_TYPES.iter() {
@@ -72,6 +76,8 @@ fn download_files() -> Result<(), Box<dyn Error>> {
         }
     }
 
+    println!();
+
     Ok(())
 }
 
@@ -79,6 +85,9 @@ fn download_files() -> Result<(), Box<dyn Error>> {
  * Extract the downloaded files.
  */
 fn extract_files() -> Result<(), Box<dyn Error>> {
+
+    show_section("Extract Files");
+
     let mut count = 0;
 
     for data_type in DATA_TYPES.iter() {
@@ -126,6 +135,7 @@ fn extract_files() -> Result<(), Box<dyn Error>> {
             print_step_message(&message, count, DATA_TYPES.len(), ERROR);
         }
     }
+    println!();
     Ok(())
 }
 
@@ -133,6 +143,9 @@ fn extract_files() -> Result<(), Box<dyn Error>> {
  * Read the extracted files.
  */
 fn read_files() -> Result<(), Box<dyn Error>> {
+
+    show_section("Read Files");
+
     let mut count = 0;
 
     for data_type in DATA_TYPES.iter() {
@@ -164,6 +177,6 @@ fn read_files() -> Result<(), Box<dyn Error>> {
             print_step_message(&message, count, DATA_TYPES.len(), ERROR);
         }
     }
-
+    println!();
     Ok(())
 }
