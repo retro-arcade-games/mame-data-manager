@@ -1,12 +1,10 @@
-use crate::{
-    core::data_types::DATA_TYPES,
-    helpers::{
-        data_source_helper::get_data_source,
-        file_download_helper::download_file,
-        file_extractor_helper::extract_file,
-        fs_helper::{find_file_with_pattern, get_file_name, PATHS},
-        ui_helper::{icons::*, print_step_message, println_step_message},
-    },
+use crate::core::data_types::DATA_TYPES;
+use crate::helpers::{
+    data_source_helper::get_data_source,
+    file_download_helper::download_file,
+    file_extractor_helper::extract_file,
+    fs_helper::{find_file_with_pattern, get_file_name, PATHS},
+    ui_helper::{icons::*, print_step_message, println_step_message},
 };
 use dialoguer::{console::style, theme::ColorfulTheme, Select};
 use std::{error::Error, path::Path};

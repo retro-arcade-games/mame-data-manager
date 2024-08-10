@@ -1,11 +1,9 @@
-use std::{collections::HashMap, error::Error};
-
-use lazy_static::lazy_static;
-
 use crate::{
     core::{data::MACHINES, models::CustomData},
     helpers::ui_helper::init_progress_bar,
 };
+use lazy_static::lazy_static;
+use std::{collections::HashMap, error::Error};
 
 lazy_static! {
     static ref SUBSTITUTIONS: HashMap<&'static str, &'static str> = {

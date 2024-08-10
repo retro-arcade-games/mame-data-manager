@@ -1,12 +1,9 @@
+use crate::core::{data::MACHINES, models::Machine};
 use dialoguer::{theme::ColorfulTheme, Select};
-
 use num_format::{Locale, ToFormattedString};
 use prettytable::{row, Cell, Row, Table};
-
 use std::collections::HashSet;
 use std::error::Error;
-
-use crate::core::{data::MACHINES, models::Machine};
 
 /**
  * Show the filter submenu.

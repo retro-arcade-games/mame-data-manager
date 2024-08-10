@@ -1,6 +1,5 @@
-use std::{error::Error, fs, path::Path};
-
 use crate::core::data_types::DATA_TYPES;
+use std::{error::Error, fs, path::Path};
 
 pub struct Paths {
     pub data_path: &'static str,

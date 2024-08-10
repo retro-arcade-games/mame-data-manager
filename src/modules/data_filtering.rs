@@ -1,11 +1,8 @@
-use dialoguer::{theme::ColorfulTheme, Select};
-
 use crate::core::filters::{
     filter_categories, filter_non_games, manufacturer_refactor, name_refactor, nplayers_refactor,
 };
-
 use crate::helpers::ui_helper::{icons::*, print_step_message, println_step_message};
-
+use dialoguer::{theme::ColorfulTheme, Select};
 use std::error::Error;
 
 /**

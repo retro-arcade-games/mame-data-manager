@@ -1,13 +1,11 @@
 mod core;
 mod helpers;
 mod modules;
-
 use dialoguer::{theme::ColorfulTheme, Select};
-use std::error::Error;
-
 use helpers::fs_helper::check_folder_structure;
 use helpers::ui_helper::{show_splash_screen, show_title};
 use modules::{data_export, data_filtering, data_import, data_stats};
+use std::error::Error;
 
 fn main() -> Result<(), Box<dyn Error>> {
     check_folder_structure()?;

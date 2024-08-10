@@ -1,9 +1,8 @@
-use std::error::Error;
-
 use crate::{
     core::{data::MACHINES, models::CustomData},
     helpers::ui_helper::init_progress_bar,
 };
+use std::error::Error;
 
 /**
  * Refactor the names of the machines to ensure consistency and correctness.

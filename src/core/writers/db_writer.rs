@@ -1,10 +1,9 @@
-use rusqlite::{params, Connection, Result, Transaction};
-use std::collections::HashSet;
-use std::fs;
-
 use crate::core::data::MACHINES;
 use crate::core::models::Machine;
 use crate::helpers::ui_helper::init_progress_bar;
+use rusqlite::{params, Connection, Result, Transaction};
+use std::collections::HashSet;
+use std::fs;
 
 /**
  * Create the database and the required tables.
