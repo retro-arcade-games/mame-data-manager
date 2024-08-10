@@ -77,14 +77,14 @@ fn is_modified_machine(description: &str) -> bool {
 }
 
 /**
- * Check if custom_data.manufacturer is invalid
+ * Check if extended_data.manufacturer is invalid
  */
 fn has_invalid_manufacturer(machine: &Machine) -> bool {
     let invalid_manufacturers = vec!["unknown", "bootleg"];
-    // Check if machine has custom data
-    if let Some(custom_data) = &machine.custom_data {
+    // Check if machine has extended data
+    if let Some(extended_data) = &machine.extended_data {
         // Check if manufacturer is invalid
-        if let Some(manufacturer) = &custom_data.manufacturer {
+        if let Some(manufacturer) = &extended_data.manufacturer {
             for invalid_manufacturer in invalid_manufacturers {
                 if manufacturer
                     .to_lowercase()

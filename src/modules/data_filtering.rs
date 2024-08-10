@@ -64,7 +64,6 @@ fn refactor_names() -> Result<(), Box<dyn Error>> {
  * Filter the categories.
  */
 fn filter_categories() -> Result<(), Box<dyn Error>> {
-
     show_section("Remove non game machines by category");
 
     let message = format!("Removing non game machines by category");
@@ -88,7 +87,6 @@ fn filter_categories() -> Result<(), Box<dyn Error>> {
  * Filter the non games.
  */
 fn filter_non_games() -> Result<(), Box<dyn Error>> {
-
     show_section("Remove non game machines");
 
     let message = format!("Removing non game machines");
@@ -104,7 +102,7 @@ fn filter_non_games() -> Result<(), Box<dyn Error>> {
         removed_machines?, rounded_secs
     );
     print_step_message(&message, 1, 1, SUCCESS);
-    println!("");
+    println!();
     Ok(())
 }
 
@@ -112,7 +110,6 @@ fn filter_non_games() -> Result<(), Box<dyn Error>> {
  * Refactor the manufacturers.
  */
 fn refactor_manufacturers() -> Result<(), Box<dyn Error>> {
-    
     show_section("Refactor manufacturers");
 
     let message = format!("Refactoring manufacturers");
@@ -125,7 +122,7 @@ fn refactor_manufacturers() -> Result<(), Box<dyn Error>> {
     let rounded_secs = (time.elapsed().as_secs_f32() * 10.0).round() / 10.0;
     let message = format!("Manufacturers refactored in {}s", rounded_secs);
     print_step_message(&message, 1, 1, SUCCESS);
-    println!("");
+    println!();
     Ok(())
 }
 
@@ -133,7 +130,6 @@ fn refactor_manufacturers() -> Result<(), Box<dyn Error>> {
  * Refactor the number of players.
  */
 fn refactor_nplayers() -> Result<(), Box<dyn Error>> {
-
     show_section("Refactor number of players");
 
     let message = format!("Refactoring number of players");
@@ -146,6 +142,6 @@ fn refactor_nplayers() -> Result<(), Box<dyn Error>> {
     let rounded_secs = (time.elapsed().as_secs_f32() * 10.0).round() / 10.0;
     let message = format!("Number of players refactored in {}s", rounded_secs);
     print_step_message(&message, 1, 1, SUCCESS);
-    println!("");
+    println!();
     Ok(())
 }

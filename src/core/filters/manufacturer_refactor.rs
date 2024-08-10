@@ -1,5 +1,5 @@
 use crate::{
-    core::{data::MACHINES, models::CustomData},
+    core::{data::MACHINES, models::ExtendedData},
     helpers::ui_helper::init_progress_bar,
 };
 use lazy_static::lazy_static;
@@ -30,11 +30,12 @@ pub fn refactor_manufacturers() -> Result<(), Box<dyn Error>> {
         }
         // Refactor the machine name
         let refactored_manufacturer = refactor_manufacturer(&machine.manufacturer);
-        // Assign the refactored name to the machine in custom data
-        if machine.custom_data.is_none() {
-            machine.custom_data = Some(CustomData::default());
+        // Assign the refactored name to the machine in extended data
+        if machine.extended_data.is_none() {
+            machine.extended_data = Some(ExtendedData::default());
         }
-        machine.custom_data.as_mut().unwrap().manufacturer = Some(refactored_manufacturer.clone());
+        machine.extended_data.as_mut().unwrap().manufacturer =
+            Some(refactored_manufacturer.clone());
         processed_count += 1;
         if processed_count % batch == 0 {
             pb.inc(batch);

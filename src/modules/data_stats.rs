@@ -33,7 +33,6 @@ pub fn show_stats_submenu() -> Result<(), Box<dyn Error>> {
  * Show the statistics.
  */
 fn show_stats() -> Result<(), Box<dyn Error>> {
-
     let machines = MACHINES.lock().unwrap();
     let machines = machines.values().collect::<Vec<&Machine>>();
 
@@ -66,6 +65,8 @@ fn show_stats() -> Result<(), Box<dyn Error>> {
     table.add_row(row!["Machines with history", r -> total_machines_with_history.to_formatted_string(&Locale::en)]);
 
     table.printstd();
+
     println!();
+
     Ok(())
 }

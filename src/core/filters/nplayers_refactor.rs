@@ -1,5 +1,5 @@
 use crate::{
-    core::{data::MACHINES, models::CustomData},
+    core::{data::MACHINES, models::ExtendedData},
     helpers::ui_helper::init_progress_bar,
 };
 use lazy_static::lazy_static;
@@ -42,10 +42,10 @@ pub fn refactor_nplayers() -> Result<(), Box<dyn Error>> {
 
     for (_, machine) in machines.iter_mut() {
         let refactored_name = refactor_nplayer(&machine.players);
-        if machine.custom_data.is_none() {
-            machine.custom_data = Some(CustomData::default());
+        if machine.extended_data.is_none() {
+            machine.extended_data = Some(ExtendedData::default());
         }
-        machine.custom_data.as_mut().unwrap().players = Some(refactored_name.clone());
+        machine.extended_data.as_mut().unwrap().players = Some(refactored_name.clone());
         processed_count += 1;
         if processed_count % batch == 0 {
             pb.inc(batch);

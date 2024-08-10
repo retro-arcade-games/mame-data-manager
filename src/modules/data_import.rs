@@ -40,7 +40,6 @@ pub fn show_import_submenu() -> Result<(), Box<dyn Error>> {
  * Download the files from the data sources.
  */
 fn download_files() -> Result<(), Box<dyn Error>> {
-
     show_section("Download Files");
 
     let mut count = 0;
@@ -85,7 +84,6 @@ fn download_files() -> Result<(), Box<dyn Error>> {
  * Extract the downloaded files.
  */
 fn extract_files() -> Result<(), Box<dyn Error>> {
-
     show_section("Extract Files");
 
     let mut count = 0;
@@ -143,7 +141,6 @@ fn extract_files() -> Result<(), Box<dyn Error>> {
  * Read the extracted files.
  */
 fn read_files() -> Result<(), Box<dyn Error>> {
-
     show_section("Read Files");
 
     let mut count = 0;

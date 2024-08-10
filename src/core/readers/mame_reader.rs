@@ -1,5 +1,5 @@
 use crate::core::data::MACHINES;
-use crate::core::models::{BiosSet, CustomData, DeviceRef, Disk, Machine, Rom, Sample, Software};
+use crate::core::models::{BiosSet, DeviceRef, Disk, ExtendedData, Machine, Rom, Sample, Software};
 use crate::helpers::ui_helper::init_progress_bar;
 use quick_xml::events::Event;
 use quick_xml::Reader;
@@ -156,7 +156,7 @@ fn process_node(
                 is_mature: None,
                 history_sections: vec![],
                 disks: vec![],
-                custom_data: None,
+                extended_data: None,
                 resources: vec![],
             };
             let attrs = e.attributes().map(|a| a.unwrap());
@@ -187,12 +187,12 @@ fn process_node(
                     _ => {}
                 }
             }
-            if machine.custom_data.is_none() {
-                machine.custom_data = Some(CustomData::default());
+            if machine.extended_data.is_none() {
+                machine.extended_data = Some(ExtendedData::default());
             }
-            machine.custom_data.as_mut().unwrap().is_parent = Some(true);
+            machine.extended_data.as_mut().unwrap().is_parent = Some(true);
             if machine.clone_of.is_some() || machine.sample_of.is_some() {
-                machine.custom_data.as_mut().unwrap().is_parent = Some(false);
+                machine.extended_data.as_mut().unwrap().is_parent = Some(false);
             }
             *current_machine = Some(machine);
         }
@@ -204,11 +204,11 @@ fn process_node(
         b"year" => {
             if let Some(ref mut machine) = current_machine {
                 machine.year = Some(reader.read_text(b"year", &mut Vec::new())?);
-                // If year contains ? then set year in Custom Data as Unknown
+                // If year contains ? then set year in Extended Data as Unknown
                 if machine.year.as_ref().unwrap().contains('?') {
-                    machine.custom_data.as_mut().unwrap().year = Some("Unknown".to_string());
+                    machine.extended_data.as_mut().unwrap().year = Some("Unknown".to_string());
                 } else {
-                    machine.custom_data.as_mut().unwrap().year = machine.year.clone();
+                    machine.extended_data.as_mut().unwrap().year = machine.year.clone();
                 }
             }
         }

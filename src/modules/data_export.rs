@@ -33,7 +33,6 @@ pub fn show_export_submenu() -> Result<(), Box<dyn Error>> {
  * Create the SQLite database.
  */
 fn export_sqlite() -> Result<(), Box<dyn Error>> {
-
     show_section("Export to SQLite");
 
     let data_base_path = format!("{}{}", PATHS.export_path, "machines.db");
@@ -58,7 +57,6 @@ fn export_sqlite() -> Result<(), Box<dyn Error>> {
  * Create the JSON file.
  */
 fn export_json() -> Result<(), Box<dyn Error>> {
-
     show_section("Export to JSON");
 
     let json_base_path = format!("{}{}", PATHS.export_path, "machines.json");

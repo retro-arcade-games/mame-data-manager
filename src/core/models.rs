@@ -28,7 +28,7 @@ pub struct Machine {
     pub is_mature: Option<bool>,
     pub history_sections: Vec<HistorySection>,
     pub disks: Vec<Disk>,
-    pub custom_data: Option<CustomData>,
+    pub extended_data: Option<ExtendedData>,
     pub resources: Vec<Resource>,
 }
 
@@ -80,7 +80,7 @@ pub struct HistorySection {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, Default)]
-pub struct CustomData {
+pub struct ExtendedData {
     pub name: Option<String>,
     pub manufacturer: Option<String>,
     pub players: Option<String>,

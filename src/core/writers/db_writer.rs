@@ -125,9 +125,9 @@ fn create_database(conn: &mut Connection) -> Result<()> {
         [],
     )?;
 
-    // Custom data table
+    // Extended data table
     conn.execute(
-        "CREATE TABLE IF NOT EXISTS custom_datas (
+        "CREATE TABLE IF NOT EXISTS extended_data (
                   id INTEGER PRIMARY KEY AUTOINCREMENT,
                   machine_name TEXT,
                   name TEXT,
@@ -288,10 +288,10 @@ fn insert_machine_data(transaction: &Transaction, machine: &Machine) -> Result<(
         ],
     )?;
 
-    if let Some(custom_data) = &machine.custom_data {
+    if let Some(extended_data) = &machine.extended_data {
         transaction.execute(
-            "INSERT OR REPLACE INTO custom_datas (machine_name, name, manufacturer, players, is_parent, year) VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
-            params![machine.name, custom_data.name, custom_data.manufacturer, custom_data.players, custom_data.is_parent, custom_data.year],
+            "INSERT OR REPLACE INTO extended_data (machine_name, name, manufacturer, players, is_parent, year) VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
+            params![machine.name, extended_data.name, extended_data.manufacturer, extended_data.players, extended_data.is_parent, extended_data.year],
         )?;
     }
 
@@ -454,11 +454,11 @@ fn insert_machine_language_relationships(conn: &mut Connection) -> Result<()> {
 }
 
 /**
- * Extract and insert the players from the custom data.
+ * Extract and insert the players from the extended data.
  */
 fn extract_and_insert_players(conn: &mut Connection) -> Result<()> {
     let unique_players: HashSet<String> = {
-        let mut stmt = conn.prepare("SELECT players FROM custom_datas")?;
+        let mut stmt = conn.prepare("SELECT players FROM extended_data")?;
         let custom_players = stmt.query_map([], |row| {
             let players: String = row.get(0)?;
             Ok(players)
@@ -492,9 +492,9 @@ fn extract_and_insert_players(conn: &mut Connection) -> Result<()> {
 fn insert_machine_player_relationships(conn: &mut Connection) -> Result<()> {
     let machine_players: Vec<(i64, String)> = {
         let mut stmt = conn.prepare(
-            "SELECT machines.id, custom_datas.players
+            "SELECT machines.id, extended_data.players
              FROM machines
-             JOIN custom_datas ON machines.id = custom_datas.machine_id",
+             JOIN extended_data ON machines.id = extended_data.machine_id",
         )?;
         let machine_players = stmt.query_map([], |row| {
             let machine_id: i64 = row.get(0)?;
@@ -568,10 +568,10 @@ fn create_relations(conn: &Connection) -> Result<()> {
          SET series_id = (SELECT id FROM series WHERE series.name = machines.series)",
         [],
     )?;
-    // Add manufacturers from custom data
+    // Add manufacturers from extended data
     conn.execute(
         "INSERT OR IGNORE INTO manufacturers (name)
-         SELECT DISTINCT manufacturer FROM custom_datas WHERE manufacturer IS NOT NULL",
+         SELECT DISTINCT manufacturer FROM extended_data WHERE manufacturer IS NOT NULL",
         [],
     )?;
     // Update machines with manufacturer_id
@@ -580,18 +580,18 @@ fn create_relations(conn: &Connection) -> Result<()> {
          SET manufacturer_id = (
              SELECT manufacturers.id
              FROM manufacturers
-             JOIN custom_datas ON custom_datas.manufacturer = manufacturers.name
-             WHERE custom_datas.machine_name = machines.name
+             JOIN extended_data ON extended_data.manufacturer = manufacturers.name
+             WHERE extended_data.machine_name = machines.name
          )",
         [],
     )?;
-    // Update custom data with machine_id
+    // Update extended data with machine_id
     conn.execute(
-        "UPDATE custom_datas
+        "UPDATE extended_data
          SET machine_id = (
              SELECT id
              FROM machines
-             WHERE machines.name = custom_datas.machine_name
+             WHERE machines.name = extended_data.machine_name
          )",
         [],
     )?;

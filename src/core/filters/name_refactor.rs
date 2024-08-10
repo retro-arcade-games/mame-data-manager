@@ -1,5 +1,5 @@
 use crate::{
-    core::{data::MACHINES, models::CustomData},
+    core::{data::MACHINES, models::ExtendedData},
     helpers::ui_helper::init_progress_bar,
 };
 use std::error::Error;
@@ -18,11 +18,11 @@ pub fn refactor_names() -> Result<(), Box<dyn Error>> {
     for (_, machine) in machines.iter_mut() {
         // Refactor the machine name
         let refactored_name = refactor_name(&machine.description);
-        // Assign the refactored name to the machine in custom data
-        if machine.custom_data.is_none() {
-            machine.custom_data = Some(CustomData::default());
+        // Assign the refactored name to the machine in extended data
+        if machine.extended_data.is_none() {
+            machine.extended_data = Some(ExtendedData::default());
         }
-        machine.custom_data.as_mut().unwrap().name = Some(refactored_name.clone());
+        machine.extended_data.as_mut().unwrap().name = Some(refactored_name.clone());
         processed_count += 1;
         if processed_count % batch == 0 {
             pb.inc(batch);
@@ -50,7 +50,6 @@ fn refactor_name(description: &Option<String>) -> String {
         .replace("&amp;", "&");
     let step2: String = step1.split('(').next().unwrap_or("").to_string();
 
-    // Paso 3: Capitalizar la primera letra de cada palabra
     let mut result = String::new();
     let mut capitalize_next = true;
     for c in step2.chars() {
