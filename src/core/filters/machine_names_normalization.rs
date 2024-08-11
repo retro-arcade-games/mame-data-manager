@@ -5,9 +5,9 @@ use crate::{
 use std::error::Error;
 
 /**
- * Refactor the names of the machines to ensure consistency and correctness.
+ * Normalize the names of the machines to ensure consistency and correctness.
  */
-pub fn refactor_names() -> Result<(), Box<dyn Error>> {
+pub fn normalize_machine_names() -> Result<(), Box<dyn Error>> {
     let mut machines = MACHINES.lock().unwrap();
     let pb = init_progress_bar(machines.len() as u64, "machines in collection");
 
@@ -16,9 +16,9 @@ pub fn refactor_names() -> Result<(), Box<dyn Error>> {
 
     // Iterate the machines hashmap
     for (_, machine) in machines.iter_mut() {
-        // Refactor the machine name
-        let refactored_name = refactor_name(&machine.description);
-        // Assign the refactored name to the machine in extended data
+        // Normalize the machine name
+        let refactored_name = normalize_name(&machine.description);
+        // Assign the normalized name to the machine in extended data
         if machine.extended_data.is_none() {
             machine.extended_data = Some(ExtendedData::default());
         }
@@ -38,7 +38,10 @@ pub fn refactor_names() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-fn refactor_name(description: &Option<String>) -> String {
+/**
+ * Normalize the machine name.
+ */
+fn normalize_name(description: &Option<String>) -> String {
     if description.is_none() {
         return String::new();
     }

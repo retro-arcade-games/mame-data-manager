@@ -31,9 +31,9 @@ lazy_static! {
 }
 
 /**
- * Refactor the number of players field.
+ * Normalize the number of players field.
  */
-pub fn refactor_nplayers() -> Result<(), Box<dyn Error>> {
+pub fn normalize_nplayers() -> Result<(), Box<dyn Error>> {
     let mut machines = MACHINES.lock().unwrap();
     let pb = init_progress_bar(machines.len() as u64, "machines in collection");
 
@@ -62,7 +62,7 @@ pub fn refactor_nplayers() -> Result<(), Box<dyn Error>> {
 }
 
 /**
- * Refactor the number of players field.
+ * Normalize the number of players.
  */
 fn refactor_nplayer(nplayers: &Option<String>) -> String {
     nplayers

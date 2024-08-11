@@ -9,7 +9,13 @@ use std::error::Error;
  */
 pub fn show_export_submenu() -> Result<(), Box<dyn Error>> {
     loop {
-        let selections = &["Export to SQLite", "Export to JSON", "Back"];
+        let selections = &[
+            "Export to SQLite",
+            "Export to JSON",
+            "Export to ODS",
+            "Export to CSV",
+            "Back",
+        ];
         let selection = Select::with_theme(&ColorfulTheme::default())
             .default(0)
             .items(&selections[..])
@@ -19,7 +25,9 @@ pub fn show_export_submenu() -> Result<(), Box<dyn Error>> {
         match selection {
             0 => export_sqlite()?,
             1 => export_json()?,
-            2 => {
+            2 => export_ods()?,
+            3 => export_csv()?,
+            4 => {
                 break;
             }
             _ => unreachable!(),
@@ -75,4 +83,52 @@ fn export_json() -> Result<(), Box<dyn Error>> {
     println!();
 
     Ok(())
+}
+
+/**
+ * Create the ODS file.
+ */
+fn export_ods() -> Result<(), Box<dyn Error>> {
+    show_section("Export to ODS");
+
+    // let ods_base_path = format!("{}{}", PATHS.export_path, "machines.ods");
+
+    // let time = std::time::Instant::now();
+
+    let message = format!("Creating {} ODS file", style("machines.ods").cyan());
+    println_step_message(&message, 1, 1, WRITE);
+
+    todo!("Implement the ODS writer");
+
+    // let rounded_secs = (time.elapsed().as_secs_f32() * 10.0).round() / 10.0;
+    // let message = format!("JSON file created in {}s", rounded_secs);
+    // print_step_message(&message, 1, 1, SUCCESS);
+
+    // println!();
+
+    // Ok(())
+}
+
+/**
+ * Create the CSV file.
+ */
+fn export_csv() -> Result<(), Box<dyn Error>> {
+    show_section("Export to CSV");
+
+    // let csv_base_path = format!("{}{}", PATHS.export_path, "machines.csv");
+
+    // let time = std::time::Instant::now();
+
+    let message = format!("Creating {} CSV file", style("machines.csv").cyan());
+    println_step_message(&message, 1, 1, WRITE);
+
+    todo!("Implement the CSV writer");
+
+    // let rounded_secs = (time.elapsed().as_secs_f32() * 10.0).round() / 10.0;
+    // let message = format!("CSV file created in {}s", rounded_secs);
+    // print_step_message(&message, 1, 1, SUCCESS);
+
+    // println!();
+
+    // Ok(())
 }

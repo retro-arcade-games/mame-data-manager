@@ -4,7 +4,7 @@ use std::error::Error;
 /**
  * Filter out machines with categories that are not relevant to arcade machines
  */
-pub fn filter_categories() -> Result<u64, Box<dyn Error>> {
+pub fn remove_non_game_categories() -> Result<u64, Box<dyn Error>> {
     let mut machines = MACHINES.lock().unwrap();
     // List of categories to ignore
     let ignored_categories = vec![

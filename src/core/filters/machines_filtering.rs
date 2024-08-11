@@ -4,10 +4,18 @@ use crate::{
 };
 use std::error::Error;
 
+pub enum MachineFilter {
+    Device,
+    Bios,
+    Mechanical,
+    Modified,
+    All,
+}
+
 /**
- * Filter out non-game machines from the collection
+ * Remove machines that match the filter
  */
-pub fn filter_non_games() -> Result<u64, Box<dyn Error>> {
+pub fn remove_machines_by_filter(machine_filter: MachineFilter) -> Result<u64, Box<dyn Error>> {
     let mut machines = MACHINES.lock().unwrap();
     let mut removed_machine_count: u64 = 0;
     let mut machines_to_remove: Vec<String> = Vec::new();
@@ -19,7 +27,7 @@ pub fn filter_non_games() -> Result<u64, Box<dyn Error>> {
 
     // Iterate the machines hashmap
     for (_, machine) in machines.iter_mut() {
-        if is_non_game_machine(machine) {
+        if filter_applies(machine, &machine_filter) {
             machines_to_remove.push(machine.name.clone());
             removed_machine_count += 1;
         }
@@ -49,13 +57,28 @@ pub fn filter_non_games() -> Result<u64, Box<dyn Error>> {
     Ok(removed_machine_count)
 }
 
-fn is_non_game_machine(machine: &Machine) -> bool {
-    machine.is_device.unwrap_or(false)
-        || machine.is_bios.unwrap_or(false)
-        || machine.is_mechanical.unwrap_or(false)
-        || is_modified_machine(&machine.description.as_ref().unwrap_or(&"".to_string()))
-        || has_invalid_manufacturer(machine)
-        || has_invalid_players(&machine)
+/**
+ * Check if the filter applies to the machine
+ */
+fn filter_applies(machine: &Machine, machine_filter: &MachineFilter) -> bool {
+    match machine_filter {
+        MachineFilter::Device => machine.is_device.unwrap_or(false),
+        MachineFilter::Bios => machine.is_bios.unwrap_or(false),
+        MachineFilter::Mechanical => machine.is_mechanical.unwrap_or(false),
+        MachineFilter::Modified => {
+            is_modified_machine(&machine.description.as_ref().unwrap_or(&"".to_string()))
+                || has_invalid_manufacturer(machine)
+                || has_invalid_players(&machine)
+        }
+        MachineFilter::All => {
+            machine.is_device.unwrap_or(false)
+                || machine.is_bios.unwrap_or(false)
+                || machine.is_mechanical.unwrap_or(false)
+                || is_modified_machine(&machine.description.as_ref().unwrap_or(&"".to_string()))
+                || has_invalid_manufacturer(machine)
+                || has_invalid_players(&machine)
+        }
+    }
 }
 
 /**
@@ -77,21 +100,18 @@ fn is_modified_machine(description: &str) -> bool {
 }
 
 /**
- * Check if extended_data.manufacturer is invalid
+ * Check if manufacturer is invalid
  */
 fn has_invalid_manufacturer(machine: &Machine) -> bool {
     let invalid_manufacturers = vec!["unknown", "bootleg"];
-    // Check if machine has extended data
-    if let Some(extended_data) = &machine.extended_data {
-        // Check if manufacturer is invalid
-        if let Some(manufacturer) = &extended_data.manufacturer {
-            for invalid_manufacturer in invalid_manufacturers {
-                if manufacturer
-                    .to_lowercase()
-                    .contains(&invalid_manufacturer.to_lowercase())
-                {
-                    return true;
-                }
+    // Check if manufacturer in machine is invalid
+    if let Some(manufacturer) = &machine.manufacturer {
+        for invalid_manufacturer in invalid_manufacturers {
+            if manufacturer
+                .to_lowercase()
+                .contains(&invalid_manufacturer.to_lowercase())
+            {
+                return true;
             }
         }
     }

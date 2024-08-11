@@ -22,10 +22,10 @@ fn show_main_menu() -> Result<(), Box<dyn Error>> {
 
     loop {
         let selections = &[
-            "Manage input data >",
+            "Input data >",
             "Filter data >",
             "View statistics >",
-            "Export information >",
+            "Export data >",
             "Exit",
         ];
         let selection = Select::with_theme(&ColorfulTheme::default())

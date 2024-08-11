@@ -13,9 +13,9 @@ lazy_static! {
 }
 
 /**
- * Refactor the manufacturer name.
+ * Normalize the names of the manufacturers to ensure consistency and correctness.
  */
-pub fn refactor_manufacturers() -> Result<(), Box<dyn Error>> {
+pub fn normalize_manufacturers() -> Result<(), Box<dyn Error>> {
     let mut machines = MACHINES.lock().unwrap();
     let pb = init_progress_bar(machines.len() as u64, "machines in collection");
 
@@ -52,7 +52,7 @@ pub fn refactor_manufacturers() -> Result<(), Box<dyn Error>> {
 }
 
 /**
- * Refactor the manufacturer name.
+ * Normalize the manufacturer name.
  */
 fn refactor_manufacturer(manufacturer: &Option<String>) -> String {
     // Keep only the first part of the manufacturer removing anything after (, /

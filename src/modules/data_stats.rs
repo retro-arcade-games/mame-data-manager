@@ -10,7 +10,13 @@ use std::error::Error;
  */
 pub fn show_stats_submenu() -> Result<(), Box<dyn Error>> {
     loop {
-        let selections = &["View all", "< Back"];
+        let selections = &[
+            "View all",
+            "Top categories",
+            "Top manufacturers",
+            "Top series",
+            "< Back",
+        ];
         let selection = Select::with_theme(&ColorfulTheme::default())
             .default(0)
             .items(&selections[..])
@@ -19,7 +25,10 @@ pub fn show_stats_submenu() -> Result<(), Box<dyn Error>> {
 
         match selection {
             0 => show_stats()?,
-            1 => {
+            1 => show_top_categories()?,
+            2 => show_top_manufacturers()?,
+            3 => show_top_series()?,
+            4 => {
                 break;
             }
             _ => unreachable!(),
@@ -69,4 +78,25 @@ fn show_stats() -> Result<(), Box<dyn Error>> {
     println!();
 
     Ok(())
+}
+
+/**
+ * Show the top categories.
+ */
+fn show_top_categories() -> Result<(), Box<dyn Error>> {
+    todo!("Implement top categories");
+}
+
+/**
+ * Show the top manufacturers.
+ */
+fn show_top_manufacturers() -> Result<(), Box<dyn Error>> {
+    todo!("Implement top manufacturers");
+}
+
+/**
+ * Show the top series.
+ */
+fn show_top_series() -> Result<(), Box<dyn Error>> {
+    todo!("Implement top series");
 }

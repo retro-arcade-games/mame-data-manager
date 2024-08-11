@@ -1,5 +1,7 @@
+use crate::core::filters::machines_filtering::MachineFilter;
 use crate::core::filters::{
-    filter_categories, filter_non_games, manufacturer_refactor, name_refactor, nplayers_refactor,
+    machine_names_normalization, machines_filtering, manufacturers_normalization,
+    non_game_categories_removal, nplayers_normalization,
 };
 use crate::helpers::ui_helper::{icons::*, print_step_message, println_step_message, show_section};
 use dialoguer::{theme::ColorfulTheme, Select};
@@ -11,11 +13,15 @@ use std::error::Error;
 pub fn show_filtering_submenu() -> Result<(), Box<dyn Error>> {
     loop {
         let selections = &[
-            "Refactor names",
-            "Remove non game categories",
-            "Remove non games",
-            "Refactor manufacturers",
-            "Refactor players",
+            "Normalize machine names",
+            "Normalize manufacturers",
+            "Normalize number of players",
+            "Remove machines with non game categories",
+            "Remove devices machines",
+            "Remove bios machines",
+            "Remove mechanical machines",
+            "Remove modified machines",
+            "Remove ALL non game machines (apply all filters)",
             "< Back",
         ];
         let selection = Select::with_theme(&ColorfulTheme::default())
@@ -25,12 +31,16 @@ pub fn show_filtering_submenu() -> Result<(), Box<dyn Error>> {
             .unwrap();
 
         match selection {
-            0 => refactor_names()?,
-            1 => filter_categories()?,
-            2 => filter_non_games()?,
-            3 => refactor_manufacturers()?,
-            4 => refactor_nplayers()?,
-            5 => {
+            0 => normalize_machine_names()?,
+            1 => normalize_manufacturers()?,
+            2 => normalize_nplayers()?,
+            3 => remove_non_game_categories()?,
+            4 => remove_non_games(MachineFilter::Device)?,
+            5 => remove_non_games(MachineFilter::Bios)?,
+            6 => remove_non_games(MachineFilter::Mechanical)?,
+            7 => remove_non_games(MachineFilter::Modified)?,
+            8 => remove_non_games(MachineFilter::All)?,
+            9 => {
                 break;
             }
             _ => unreachable!(),
@@ -41,37 +51,77 @@ pub fn show_filtering_submenu() -> Result<(), Box<dyn Error>> {
 }
 
 /**
- * Refactor the names.
+ * Normalize the machine names.
  */
-fn refactor_names() -> Result<(), Box<dyn Error>> {
-    show_section("Refactor machine names");
+fn normalize_machine_names() -> Result<(), Box<dyn Error>> {
+    show_section("Normalize machine names");
 
-    let message = format!("Refactoring machine names");
+    let message = format!("Normalizing machine names");
     println_step_message(&message, 1, 1, WRITE);
 
     let time = std::time::Instant::now();
 
-    let _ = name_refactor::refactor_names();
+    let _ = machine_names_normalization::normalize_machine_names();
 
     let rounded_secs = (time.elapsed().as_secs_f32() * 10.0).round() / 10.0;
-    let message = format!("Machine names refactored in {}s", rounded_secs);
+    let message = format!("Machine names normalized in {}s", rounded_secs);
     print_step_message(&message, 1, 1, SUCCESS);
     println!();
     Ok(())
 }
 
 /**
- * Filter the categories.
+ * Normalize the manufacturers.
  */
-fn filter_categories() -> Result<(), Box<dyn Error>> {
-    show_section("Remove non game machines by category");
+fn normalize_manufacturers() -> Result<(), Box<dyn Error>> {
+    show_section("Normalize manufacturers");
 
-    let message = format!("Removing non game machines by category");
+    let message = format!("Normalizing manufacturers");
     println_step_message(&message, 1, 1, WRITE);
 
     let time = std::time::Instant::now();
 
-    let removed_machines = filter_categories::filter_categories();
+    let _ = manufacturers_normalization::normalize_manufacturers();
+
+    let rounded_secs = (time.elapsed().as_secs_f32() * 10.0).round() / 10.0;
+    let message = format!("Manufacturers normalized in {}s", rounded_secs);
+    print_step_message(&message, 1, 1, SUCCESS);
+    println!();
+    Ok(())
+}
+
+/**
+ * Normalize the number of players.
+ */
+fn normalize_nplayers() -> Result<(), Box<dyn Error>> {
+    show_section("Normalize number of players");
+
+    let message = format!("Normalizing number of players");
+    println_step_message(&message, 1, 1, WRITE);
+
+    let time = std::time::Instant::now();
+
+    let _ = nplayers_normalization::normalize_nplayers();
+
+    let rounded_secs = (time.elapsed().as_secs_f32() * 10.0).round() / 10.0;
+    let message = format!("Number of players normalized in {}s", rounded_secs);
+    print_step_message(&message, 1, 1, SUCCESS);
+    println!();
+    Ok(())
+}
+
+/**
+ * Remove machines by non game categories.
+ */
+fn remove_non_game_categories() -> Result<(), Box<dyn Error>> {
+    show_section("Remove machines by non game categories");
+
+    let message = format!("Removing machines by non game categories");
+    println_step_message(&message, 1, 1, WRITE);
+
+    let time = std::time::Instant::now();
+
+    let removed_machines = non_game_categories_removal::remove_non_game_categories();
 
     let rounded_secs = (time.elapsed().as_secs_f32() * 10.0).round() / 10.0;
     let message = format!(
@@ -84,63 +134,33 @@ fn filter_categories() -> Result<(), Box<dyn Error>> {
 }
 
 /**
- * Filter the non games.
+ * Remove machines by filter.
  */
-fn filter_non_games() -> Result<(), Box<dyn Error>> {
-    show_section("Remove non game machines");
+fn remove_non_games(remove_filter: MachineFilter) -> Result<(), Box<dyn Error>> {
+    let filter_name = match remove_filter {
+        MachineFilter::Device => "Device",
+        MachineFilter::Bios => "BIOS",
+        MachineFilter::Mechanical => "Mechanical",
+        MachineFilter::Modified => "Modified",
+        MachineFilter::All => "ALL",
+    };
 
-    let message = format!("Removing non game machines");
+    let section_name = format!("Remove {} machines", filter_name);
+
+    show_section(&section_name);
+
+    let message = format!("Removing {} machines", filter_name);
     println_step_message(&message, 1, 1, WRITE);
 
     let time = std::time::Instant::now();
 
-    let removed_machines = filter_non_games::filter_non_games();
+    let removed_machines = machines_filtering::remove_machines_by_filter(remove_filter);
 
     let rounded_secs = (time.elapsed().as_secs_f32() * 10.0).round() / 10.0;
     let message = format!(
-        "{} machines removed in {}s",
-        removed_machines?, rounded_secs
+        "{} machines with filter {} removed in {}s",
+        removed_machines?, filter_name, rounded_secs
     );
-    print_step_message(&message, 1, 1, SUCCESS);
-    println!();
-    Ok(())
-}
-
-/**
- * Refactor the manufacturers.
- */
-fn refactor_manufacturers() -> Result<(), Box<dyn Error>> {
-    show_section("Refactor manufacturers");
-
-    let message = format!("Refactoring manufacturers");
-    println_step_message(&message, 1, 1, WRITE);
-
-    let time = std::time::Instant::now();
-
-    let _ = manufacturer_refactor::refactor_manufacturers();
-
-    let rounded_secs = (time.elapsed().as_secs_f32() * 10.0).round() / 10.0;
-    let message = format!("Manufacturers refactored in {}s", rounded_secs);
-    print_step_message(&message, 1, 1, SUCCESS);
-    println!();
-    Ok(())
-}
-
-/**
- * Refactor the number of players.
- */
-fn refactor_nplayers() -> Result<(), Box<dyn Error>> {
-    show_section("Refactor number of players");
-
-    let message = format!("Refactoring number of players");
-    println_step_message(&message, 1, 1, WRITE);
-
-    let time = std::time::Instant::now();
-
-    let _ = nplayers_refactor::refactor_nplayers();
-
-    let rounded_secs = (time.elapsed().as_secs_f32() * 10.0).round() / 10.0;
-    let message = format!("Number of players refactored in {}s", rounded_secs);
     print_step_message(&message, 1, 1, SUCCESS);
     println!();
     Ok(())
