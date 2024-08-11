@@ -1,4 +1,5 @@
 use crate::core::data::MACHINES;
+use crate::core::filters::{machine_names_normalization, manufacturers_normalization};
 use crate::core::models::{BiosSet, DeviceRef, Disk, ExtendedData, Machine, Rom, Sample, Software};
 use crate::helpers::ui_helper::init_progress_bar;
 use quick_xml::events::Event;
@@ -187,6 +188,7 @@ fn process_node(
                     _ => {}
                 }
             }
+            // Set is_parent flag in Extended Data
             if machine.extended_data.is_none() {
                 machine.extended_data = Some(ExtendedData::default());
             }
@@ -194,11 +196,16 @@ fn process_node(
             if machine.clone_of.is_some() || machine.sample_of.is_some() {
                 machine.extended_data.as_mut().unwrap().is_parent = Some(false);
             }
+
             *current_machine = Some(machine);
         }
         b"description" => {
             if let Some(ref mut machine) = current_machine {
                 machine.description = Some(reader.read_text(b"description", &mut Vec::new())?);
+                // Set normalized name in Extended Data
+                let refactored_name =
+                    machine_names_normalization::normalize_name(&machine.description);
+                machine.extended_data.as_mut().unwrap().name = Some(refactored_name.clone());
             }
         }
         b"year" => {
@@ -215,6 +222,11 @@ fn process_node(
         b"manufacturer" => {
             if let Some(ref mut machine) = current_machine {
                 machine.manufacturer = Some(reader.read_text(b"manufacturer", &mut Vec::new())?);
+                // Set normalized manufacturer in Extended Data
+                let normalized_manufacturer =
+                    manufacturers_normalization::normalize_manufacturer(&machine.manufacturer);
+                machine.extended_data.as_mut().unwrap().manufacturer =
+                    Some(normalized_manufacturer.clone());
             }
         }
         b"biosset" => {

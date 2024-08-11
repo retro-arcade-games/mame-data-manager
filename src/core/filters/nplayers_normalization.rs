@@ -1,9 +1,5 @@
-use crate::{
-    core::{data::MACHINES, models::ExtendedData},
-    helpers::ui_helper::init_progress_bar,
-};
 use lazy_static::lazy_static;
-use std::{collections::HashMap, error::Error};
+use std::collections::HashMap;
 
 lazy_static! {
     static ref SUBSTITUTIONS: HashMap<&'static str, &'static str> = {
@@ -31,40 +27,9 @@ lazy_static! {
 }
 
 /**
- * Normalize the number of players field.
- */
-pub fn normalize_nplayers() -> Result<(), Box<dyn Error>> {
-    let mut machines = MACHINES.lock().unwrap();
-    let pb = init_progress_bar(machines.len() as u64, "machines in collection");
-
-    let mut processed_count = 0;
-    let batch = 5000;
-
-    for (_, machine) in machines.iter_mut() {
-        let refactored_name = refactor_nplayer(&machine.players);
-        if machine.extended_data.is_none() {
-            machine.extended_data = Some(ExtendedData::default());
-        }
-        machine.extended_data.as_mut().unwrap().players = Some(refactored_name.clone());
-        processed_count += 1;
-        if processed_count % batch == 0 {
-            pb.inc(batch);
-        }
-    }
-    let remaining = processed_count % batch;
-    if remaining > 0 {
-        pb.inc(remaining as u64);
-    }
-
-    pb.finish_and_clear();
-
-    Ok(())
-}
-
-/**
  * Normalize the number of players.
  */
-fn refactor_nplayer(nplayers: &Option<String>) -> String {
+pub fn normalize_nplayer(nplayers: &Option<String>) -> String {
     nplayers
         .as_ref()
         .unwrap_or(&"Unknown".to_string())

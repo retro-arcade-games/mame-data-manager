@@ -1,47 +1,7 @@
-use crate::{
-    core::{data::MACHINES, models::ExtendedData},
-    helpers::ui_helper::init_progress_bar,
-};
-use std::error::Error;
-
-/**
- * Normalize the names of the machines to ensure consistency and correctness.
- */
-pub fn normalize_machine_names() -> Result<(), Box<dyn Error>> {
-    let mut machines = MACHINES.lock().unwrap();
-    let pb = init_progress_bar(machines.len() as u64, "machines in collection");
-
-    let mut processed_count = 0;
-    let batch = 5000;
-
-    // Iterate the machines hashmap
-    for (_, machine) in machines.iter_mut() {
-        // Normalize the machine name
-        let refactored_name = normalize_name(&machine.description);
-        // Assign the normalized name to the machine in extended data
-        if machine.extended_data.is_none() {
-            machine.extended_data = Some(ExtendedData::default());
-        }
-        machine.extended_data.as_mut().unwrap().name = Some(refactored_name.clone());
-        processed_count += 1;
-        if processed_count % batch == 0 {
-            pb.inc(batch);
-        }
-    }
-    let remaining = processed_count % batch;
-    if remaining > 0 {
-        pb.inc(remaining as u64);
-    }
-
-    pb.finish_and_clear();
-
-    Ok(())
-}
-
 /**
  * Normalize the machine name.
  */
-fn normalize_name(description: &Option<String>) -> String {
+pub fn normalize_name(description: &Option<String>) -> String {
     if description.is_none() {
         return String::new();
     }

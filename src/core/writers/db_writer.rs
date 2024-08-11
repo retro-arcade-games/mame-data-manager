@@ -458,7 +458,8 @@ fn insert_machine_language_relationships(conn: &mut Connection) -> Result<()> {
  */
 fn extract_and_insert_players(conn: &mut Connection) -> Result<()> {
     let unique_players: HashSet<String> = {
-        let mut stmt = conn.prepare("SELECT players FROM extended_data")?;
+        let mut stmt =
+            conn.prepare("SELECT DISTINCT players FROM extended_data WHERE players IS NOT NULL")?;
         let custom_players = stmt.query_map([], |row| {
             let players: String = row.get(0)?;
             Ok(players)
@@ -494,7 +495,8 @@ fn insert_machine_player_relationships(conn: &mut Connection) -> Result<()> {
         let mut stmt = conn.prepare(
             "SELECT machines.id, extended_data.players
              FROM machines
-             JOIN extended_data ON machines.id = extended_data.machine_id",
+             INNER JOIN extended_data ON machines.id = extended_data.machine_id
+             WHERE extended_data.players IS NOT NULL",
         )?;
         let machine_players = stmt.query_map([], |row| {
             let machine_id: i64 = row.get(0)?;
@@ -577,12 +579,10 @@ fn create_relations(conn: &Connection) -> Result<()> {
     // Update machines with manufacturer_id
     conn.execute(
         "UPDATE machines
-         SET manufacturer_id = (
-             SELECT manufacturers.id
-             FROM manufacturers
-             JOIN extended_data ON extended_data.manufacturer = manufacturers.name
-             WHERE extended_data.machine_name = machines.name
-         )",
+        SET manufacturer_id = manufacturers.id
+        FROM manufacturers
+        JOIN extended_data ON extended_data.manufacturer = manufacturers.name
+        WHERE extended_data.machine_name = machines.name",
         [],
     )?;
     // Update extended data with machine_id

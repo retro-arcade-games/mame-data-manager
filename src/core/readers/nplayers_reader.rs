@@ -1,4 +1,5 @@
 use crate::core::data::MACHINES;
+use crate::core::filters::nplayers_normalization;
 use crate::helpers::ui_helper::init_progress_bar;
 use std::error::Error;
 use std::fs::File;
@@ -76,6 +77,12 @@ pub fn read_nplayers_file(file_path: &str) -> Result<(), Box<dyn Error>> {
             if let Some(machine) = machines.get_mut(rom_name) {
                 // Update machine.players with the value from the file
                 machine.players = Some(value.to_string());
+                // Add normalized player count to the extended data
+                if machine.extended_data.is_none() {
+                    machine.extended_data = Some(Default::default());
+                }
+                let normalized_name = nplayers_normalization::normalize_nplayer(&machine.players);
+                machine.extended_data.as_mut().unwrap().players = Some(normalized_name.clone());
 
                 processed_count += 1;
                 if processed_count % batch == 0 {
