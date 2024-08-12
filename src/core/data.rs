@@ -70,7 +70,10 @@ pub fn recreate_lists() {
     create_series_list(&mut machines);
 
     clear_list(&MANUFACTURERS);
-    create_manufacturers_list(&mut machines)
+    create_manufacturers_list(&mut machines);
+
+    clear_list(&PLAYERS);
+    create_players_list(&mut machines);
 }
 
 /**
@@ -96,3 +99,20 @@ fn create_manufacturers_list(machines: &HashMap<String, Machine>) {
         }
     }
 }
+
+/**
+ * Create a list of unique players from the machines in the system.
+ */
+fn create_players_list(machines: &HashMap<String, Machine>) {
+    for (_, machine) in machines.iter() {
+        if let Some(extended_data) = &machine.extended_data {
+            if let Some(players) = &extended_data.players {
+                let players = players.split(',').map(|s| s.trim()).collect::<Vec<&str>>();
+                for player in players {
+                    add_item_to_list(&PLAYERS, player.to_string());
+                }
+            }
+        }
+    }
+}
+

@@ -20,7 +20,9 @@ pub struct Machine {
     pub software_list: Vec<Software>,
     pub samples: Vec<Sample>,
     pub driver_status: Option<String>,
+    // Added iterating the languages.ini file
     pub languages: Vec<String>,
+    // Read directly from players.ini file
     pub players: Option<String>,
     pub series: Option<String>,
     pub category: Option<String>,
@@ -81,10 +83,15 @@ pub struct HistorySection {
 
 #[derive(Debug, Serialize, Deserialize, Clone, Default)]
 pub struct ExtendedData {
+    // Normalization of the description field
     pub name: Option<String>,
+    // Normalization of the manufacturer field
     pub manufacturer: Option<String>,
+    // Normalization of the players field
     pub players: Option<String>,
+    // Indicates if the machine is a parent
     pub is_parent: Option<bool>,
+    // Normalization of the year field
     pub year: Option<String>,
 }
 

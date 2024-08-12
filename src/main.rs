@@ -45,6 +45,7 @@ fn show_main_menu() -> Result<(), Box<dyn Error>> {
                 // Print MACHINES len
                 let machines = core::data::MACHINES.lock().unwrap();
                 println!("Machines: {}", machines.len());
+                println!("---------------------------------");
                 // Print series len
                 println!("Series: {}", get_list(&core::data::SERIES).len());
                 // Print top 10 series
@@ -52,6 +53,7 @@ fn show_main_menu() -> Result<(), Box<dyn Error>> {
                 for (name, count) in top_series {
                     println!("{}: {}", name, count);
                 }
+                println!("---------------------------------");
                 // Print manufacturers len
                 println!("Manufacturers: {}", get_list(&core::data::MANUFACTURERS).len());
                 // Print top 10 manufacturers
@@ -59,14 +61,15 @@ fn show_main_menu() -> Result<(), Box<dyn Error>> {
                 for (name, count) in top_manufacturers {
                     println!("{}: {}", name, count);
                 }
-                let players = core::data::PLAYERS.lock().unwrap();
-                println!("Players: {}", players.len());
-                let languages = core::data::LANGUAGES.lock().unwrap();
-                println!("Languages: {}", languages.len());
-                let categories = core::data::CATEGORIES.lock().unwrap();
-                println!("Categories: {}", categories.len());
-                let subcategories = core::data::SUBCATEGORIES.lock().unwrap();
-                println!("Subcategories: {}", subcategories.len());
+                println!("---------------------------------");
+                // Print players len
+                println!("Players: {}", get_list(&core::data::PLAYERS).len());
+                // Print top 10 players
+                let top_players = core::data::get_top(&core::data::PLAYERS, 10);
+                for (name, count) in top_players {
+                    println!("{}: {}", name, count);
+                }
+                
             }
             5 => {
                 break;

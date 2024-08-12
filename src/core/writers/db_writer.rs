@@ -1,4 +1,4 @@
-use crate::core::data::{get_list, MACHINES, MANUFACTURERS, SERIES};
+use crate::core::data::{get_list, MACHINES, MANUFACTURERS, PLAYERS, SERIES};
 use crate::core::models::Machine;
 use crate::helpers::ui_helper::init_progress_bar;
 use rusqlite::{params, Connection, Result, Transaction};
@@ -457,28 +457,11 @@ fn insert_machine_language_relationships(conn: &mut Connection) -> Result<()> {
  * Extract and insert the players from the extended data.
  */
 fn extract_and_insert_players(conn: &mut Connection) -> Result<()> {
-    let unique_players: HashSet<String> = {
-        let mut stmt =
-            conn.prepare("SELECT DISTINCT players FROM extended_data WHERE players IS NOT NULL")?;
-        let custom_players = stmt.query_map([], |row| {
-            let players: String = row.get(0)?;
-            Ok(players)
-        })?;
-
-        let mut unique_players = HashSet::new();
-        for players_str in custom_players {
-            let players = players_str?;
-            for player in players.split(',').map(|s| s.trim()) {
-                unique_players.insert(player.to_string());
-            }
-        }
-        unique_players
-    };
-
+    let players = get_list(&PLAYERS);
     let tx = conn.transaction()?;
     {
         let mut insert_stmt = tx.prepare("INSERT OR IGNORE INTO players (name) VALUES (?)")?;
-        for player in unique_players {
+        for player in players {
             insert_stmt.execute([&player])?;
         }
     }
