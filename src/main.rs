@@ -55,7 +55,10 @@ fn show_main_menu() -> Result<(), Box<dyn Error>> {
                 }
                 println!("---------------------------------");
                 // Print manufacturers len
-                println!("Manufacturers: {}", get_list(&core::data::MANUFACTURERS).len());
+                println!(
+                    "Manufacturers: {}",
+                    get_list(&core::data::MANUFACTURERS).len()
+                );
                 // Print top 10 manufacturers
                 let top_manufacturers = core::data::get_top(&core::data::MANUFACTURERS, 10);
                 for (name, count) in top_manufacturers {
@@ -69,7 +72,14 @@ fn show_main_menu() -> Result<(), Box<dyn Error>> {
                 for (name, count) in top_players {
                     println!("{}: {}", name, count);
                 }
-                
+                println!("---------------------------------");
+                // Print languages len
+                println!("Languages: {}", get_list(&core::data::LANGUAGES).len());
+                // Print top 10 languages
+                let top_languages = core::data::get_top(&core::data::LANGUAGES, 10);
+                for (name, count) in top_languages {
+                    println!("{}: {}", name, count);
+                }
             }
             5 => {
                 break;

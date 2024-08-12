@@ -1,8 +1,7 @@
-use crate::core::data::{get_list, MACHINES, MANUFACTURERS, PLAYERS, SERIES};
+use crate::core::data::{get_list, LANGUAGES, MACHINES, MANUFACTURERS, PLAYERS, SERIES};
 use crate::core::models::Machine;
 use crate::helpers::ui_helper::init_progress_bar;
 use rusqlite::{params, Connection, Result, Transaction};
-use std::collections::HashSet;
 use std::fs;
 
 /**
@@ -393,27 +392,11 @@ fn insert_machine_data(transaction: &Transaction, machine: &Machine) -> Result<(
  * Extract and insert the languages from the machines data.
  */
 fn extract_and_insert_languages(conn: &mut Connection) -> Result<()> {
-    let unique_languages: HashSet<String> = {
-        let mut stmt = conn.prepare("SELECT languages FROM machines")?;
-        let machine_languages = stmt.query_map([], |row| {
-            let languages: String = row.get(0)?;
-            Ok(languages)
-        })?;
-
-        let mut unique_languages = HashSet::new();
-        for lang_str in machine_languages {
-            let languages = lang_str?;
-            for language in languages.split(',').map(|s| s.trim()) {
-                unique_languages.insert(language.to_string());
-            }
-        }
-        unique_languages
-    };
-
+    let languages = get_list(&LANGUAGES);
     let tx = conn.transaction()?;
     {
         let mut insert_stmt = tx.prepare("INSERT OR IGNORE INTO languages (name) VALUES (?)")?;
-        for language in unique_languages {
+        for language in languages {
             insert_stmt.execute([&language])?;
         }
     }
@@ -561,7 +544,8 @@ fn create_relations(conn: &mut Connection) -> Result<()> {
     let manufacturers = get_list(&MANUFACTURERS);
     let tx = conn.transaction()?;
     {
-        let mut insert_stmt = tx.prepare("INSERT OR IGNORE INTO manufacturers (name) VALUES (?)")?;
+        let mut insert_stmt =
+            tx.prepare("INSERT OR IGNORE INTO manufacturers (name) VALUES (?)")?;
         for manufacturer in manufacturers {
             insert_stmt.execute([&manufacturer])?;
         }

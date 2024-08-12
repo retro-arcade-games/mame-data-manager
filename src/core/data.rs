@@ -74,6 +74,9 @@ pub fn recreate_lists() {
 
     clear_list(&PLAYERS);
     create_players_list(&mut machines);
+
+    clear_list(&LANGUAGES);
+    create_languages_list(&mut machines);
 }
 
 /**
@@ -116,3 +119,13 @@ fn create_players_list(machines: &HashMap<String, Machine>) {
     }
 }
 
+/**
+ * Create a list of unique languages from the machines in the system.
+ */
+fn create_languages_list(machines: &HashMap<String, Machine>) {
+    for (_, machine) in machines.iter() {
+        for language in &machine.languages {
+            add_item_to_list(&LANGUAGES, language.clone());
+        }
+    }
+}
