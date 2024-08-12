@@ -1,6 +1,5 @@
 use crate::core::data::MACHINES;
 use crate::helpers::ui_helper::init_progress_bar;
-use std::collections::HashMap;
 use std::error::Error;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
@@ -68,9 +67,6 @@ pub fn read_series_file(file_path: &str) -> Result<(), Box<dyn Error>> {
         pb.inc(remaining as u64);
     }
 
-    // Create a list of series from the machines.
-    create_series_list(&mut machines);
-
     pb.finish_and_clear();
     Ok(())
 }
@@ -104,20 +100,4 @@ fn count_total_elements(file_path: &str) -> Result<usize, Box<dyn Error>> {
         .count();
 
     Ok(count)
-}
-
-/**
- * Create a list of series from the given HashMap of machines.
- */
-fn create_series_list(machines: &mut HashMap<String, crate::core::models::Machine>) {
-    let mut series = crate::core::data::SERIES.lock().unwrap();
-
-    for (_, machine) in machines.iter() {
-        if let Some(series_name) = &machine.series {
-            if !series.contains(&series_name) {
-                series.push(series_name.clone());
-            }
-        }
-    }
-    series.sort();
 }

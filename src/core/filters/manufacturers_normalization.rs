@@ -15,9 +15,15 @@ pub fn normalize_manufacturer(manufacturer: &Option<String>) -> String {
     let parts: Vec<&str> = manufacturer
         .as_ref()
         .unwrap()
+        .trim()
         .split(&['(', '/'][..])
         .collect();
     let mut result = parts[0].to_string();
+
+    // Fix for edge case where the first part is empty
+    if result.is_empty() && parts.len() > 1 {
+        result = parts[1].to_string();
+    }
 
     // Check if needs cleaning
     if NEEDS_CLEANING.is_match(&result) {

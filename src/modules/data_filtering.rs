@@ -1,3 +1,4 @@
+use crate::core::data::recreate_lists;
 use crate::core::filters::machines_filtering::MachineFilter;
 use crate::core::filters::{machines_filtering, non_game_categories_removal};
 use crate::helpers::ui_helper::{icons::*, print_step_message, println_step_message, show_section};
@@ -61,6 +62,10 @@ fn remove_non_game_categories() -> Result<(), Box<dyn Error>> {
     );
     print_step_message(&message, 1, 1, SUCCESS);
     println!();
+
+    // Recreate the lists after removing the machines.
+    recreate_lists();
+
     Ok(())
 }
 
@@ -94,5 +99,9 @@ fn remove_non_games(remove_filter: MachineFilter) -> Result<(), Box<dyn Error>> 
     );
     print_step_message(&message, 1, 1, SUCCESS);
     println!();
+
+    // Recreate the lists after removing the machines.
+    recreate_lists();
+
     Ok(())
 }

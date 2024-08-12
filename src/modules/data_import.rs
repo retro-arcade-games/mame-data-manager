@@ -1,3 +1,4 @@
+use crate::core::data::recreate_lists;
 use crate::core::data_types::DATA_TYPES;
 use crate::helpers::ui_helper::show_section;
 use crate::helpers::{
@@ -175,5 +176,9 @@ fn read_files() -> Result<(), Box<dyn Error>> {
         }
     }
     println!();
+
+    // Recreate the lists after reading the files.
+    recreate_lists();
+
     Ok(())
 }

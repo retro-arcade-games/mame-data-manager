@@ -4,7 +4,6 @@ use crate::core::models::{BiosSet, DeviceRef, Disk, ExtendedData, Machine, Rom, 
 use crate::helpers::ui_helper::init_progress_bar;
 use quick_xml::events::Event;
 use quick_xml::Reader;
-use std::collections::HashMap;
 use std::error::Error;
 use std::fs::{self, File};
 use std::io::BufReader;
@@ -104,11 +103,7 @@ pub fn read_mame_file(file_path: &str) -> Result<(), Box<dyn std::error::Error>>
                 }
                 _ => (),
             },
-            Ok(Event::Eof) => {
-                // Add unique manufacturers to the MANUFACTURERS Vec from extended data
-                create_manufacturers_list(&machines);
-                break;
-            }
+            Ok(Event::Eof) => break,
             Err(e) => return Err(Box::new(e)),
             _ => (),
         }
@@ -396,21 +391,4 @@ fn count_total_elements(file_content: &str) -> Result<usize, Box<dyn Error>> {
     }
 
     Ok(count)
-}
-
-/**
- * Create a list of unique manufacturers from the machines in the system.
- */
-fn create_manufacturers_list(machines: &HashMap<String, Machine>) {
-    let mut manufacturers = crate::core::data::MANUFACTURERS.lock().unwrap();
-    for machine in machines.values() {
-        if let Some(ref extended_data) = machine.extended_data {
-            if let Some(ref manufacturer) = extended_data.manufacturer {
-                if !manufacturers.contains(&manufacturer) {
-                    manufacturers.push(manufacturer.clone());
-                }
-            }
-        }
-    }
-    manufacturers.sort();
 }

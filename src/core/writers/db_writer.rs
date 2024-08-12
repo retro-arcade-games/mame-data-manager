@@ -1,4 +1,4 @@
-use crate::core::data::MACHINES;
+use crate::core::data::{get_list, MACHINES, MANUFACTURERS, SERIES};
 use crate::core::models::Machine;
 use crate::helpers::ui_helper::init_progress_bar;
 use rusqlite::{params, Connection, Result, Transaction};
@@ -526,7 +526,7 @@ fn insert_machine_player_relationships(conn: &mut Connection) -> Result<()> {
 /**
  * Create the relations between the machines and other entities.
  */
-fn create_relations(conn: &Connection) -> Result<()> {
+fn create_relations(conn: &mut Connection) -> Result<()> {
     // Add categories
     conn.execute(
         "INSERT OR IGNORE INTO categories (name)
@@ -559,11 +559,15 @@ fn create_relations(conn: &Connection) -> Result<()> {
         [],
     )?;
     // Add series
-    conn.execute(
-        "INSERT OR IGNORE INTO series (name)
-         SELECT DISTINCT series FROM machines WHERE series IS NOT NULL",
-        [],
-    )?;
+    let series = get_list(&SERIES);
+    let tx = conn.transaction()?;
+    {
+        let mut insert_stmt = tx.prepare("INSERT OR IGNORE INTO series (name) VALUES (?)")?;
+        for series_name in series {
+            insert_stmt.execute([&series_name])?;
+        }
+    }
+    tx.commit()?;
     // Update machines with series_id
     conn.execute(
         "UPDATE machines
@@ -571,11 +575,15 @@ fn create_relations(conn: &Connection) -> Result<()> {
         [],
     )?;
     // Add manufacturers from extended data
-    conn.execute(
-        "INSERT OR IGNORE INTO manufacturers (name)
-         SELECT DISTINCT manufacturer FROM extended_data WHERE manufacturer IS NOT NULL",
-        [],
-    )?;
+    let manufacturers = get_list(&MANUFACTURERS);
+    let tx = conn.transaction()?;
+    {
+        let mut insert_stmt = tx.prepare("INSERT OR IGNORE INTO manufacturers (name) VALUES (?)")?;
+        for manufacturer in manufacturers {
+            insert_stmt.execute([&manufacturer])?;
+        }
+    }
+    tx.commit()?;
     // Update machines with manufacturer_id
     conn.execute(
         "UPDATE machines
