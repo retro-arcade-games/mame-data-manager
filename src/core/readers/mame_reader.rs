@@ -211,8 +211,10 @@ fn process_node(
         b"year" => {
             if let Some(ref mut machine) = current_machine {
                 machine.year = Some(reader.read_text(b"year", &mut Vec::new())?);
-                // If year contains ? then set year in Extended Data as Unknown
-                if machine.year.as_ref().unwrap().contains('?') {
+                // If year contains ? or is empty then set year in Extended Data as Unknown
+                if machine.year.as_ref().unwrap().contains('?')
+                    || machine.year.as_ref().unwrap().is_empty()
+                {
                     machine.extended_data.as_mut().unwrap().year = Some("Unknown".to_string());
                 } else {
                     machine.extended_data.as_mut().unwrap().year = machine.year.clone();
