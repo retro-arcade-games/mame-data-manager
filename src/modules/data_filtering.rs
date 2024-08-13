@@ -16,7 +16,8 @@ pub fn show_filtering_submenu() -> Result<(), Box<dyn Error>> {
             "Remove bios machines",
             "Remove mechanical machines",
             "Remove modified machines",
-            "Remove ALL non game machines (apply all filters)",
+            "Remove clones",
+            "Remove ALL non game machines (apply all machine filters)",
             "< Back",
         ];
         let selection = Select::with_theme(&ColorfulTheme::default())
@@ -31,8 +32,9 @@ pub fn show_filtering_submenu() -> Result<(), Box<dyn Error>> {
             2 => remove_non_games(MachineFilter::Bios)?,
             3 => remove_non_games(MachineFilter::Mechanical)?,
             4 => remove_non_games(MachineFilter::Modified)?,
-            5 => remove_non_games(MachineFilter::All)?,
-            6 => {
+            5 => remove_non_games(MachineFilter::Clones)?,
+            6 => remove_non_games(MachineFilter::All)?,
+            7 => {
                 break;
             }
             _ => unreachable!(),
@@ -78,6 +80,7 @@ fn remove_non_games(remove_filter: MachineFilter) -> Result<(), Box<dyn Error>> 
         MachineFilter::Bios => "BIOS",
         MachineFilter::Mechanical => "Mechanical",
         MachineFilter::Modified => "Modified",
+        MachineFilter::Clones => "Clones",
         MachineFilter::All => "ALL",
     };
 

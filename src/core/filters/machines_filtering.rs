@@ -9,6 +9,7 @@ pub enum MachineFilter {
     Bios,
     Mechanical,
     Modified,
+    Clones,
     All,
 }
 
@@ -70,6 +71,7 @@ fn filter_applies(machine: &Machine, machine_filter: &MachineFilter) -> bool {
                 || has_invalid_manufacturer(machine)
                 || has_invalid_players(&machine)
         }
+        MachineFilter::Clones => is_clone(machine),
         MachineFilter::All => {
             machine.is_device.unwrap_or(false)
                 || machine.is_bios.unwrap_or(false)
@@ -77,6 +79,7 @@ fn filter_applies(machine: &Machine, machine_filter: &MachineFilter) -> bool {
                 || is_modified_machine(&machine.description.as_ref().unwrap_or(&"".to_string()))
                 || has_invalid_manufacturer(machine)
                 || has_invalid_players(&machine)
+                || is_clone(machine)
         }
     }
 }
@@ -134,4 +137,11 @@ fn has_invalid_players(machine: &Machine) -> bool {
         }
     }
     false
+}
+
+/**
+ * Remove machines that are clones
+ */
+fn is_clone(machine: &Machine) -> bool {
+    machine.clone_of.is_some() || machine.rom_of.is_some()
 }

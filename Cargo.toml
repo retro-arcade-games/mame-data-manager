@@ -21,3 +21,4 @@ console = "0.14.1"
 prettytable-rs = "^0.10"
 num-format = "0.4.4"
 rusqlite = { version = "0.26", features = ["serde_json"] }
+csv = "1.1"

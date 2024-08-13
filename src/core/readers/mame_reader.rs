@@ -193,7 +193,7 @@ fn process_node(
                 machine.extended_data = Some(ExtendedData::default());
             }
             machine.extended_data.as_mut().unwrap().is_parent = Some(true);
-            if machine.clone_of.is_some() || machine.sample_of.is_some() {
+            if machine.clone_of.is_some() || machine.rom_of.is_some() {
                 machine.extended_data.as_mut().unwrap().is_parent = Some(false);
             }
 
