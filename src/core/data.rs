@@ -77,6 +77,10 @@ pub fn recreate_lists() {
 
     clear_list(&LANGUAGES);
     create_languages_list(&mut machines);
+
+    clear_list(&CATEGORIES);
+    clear_list(&SUBCATEGORIES);
+    create_categories_list(&machines);
 }
 
 /**
@@ -126,6 +130,21 @@ fn create_languages_list(machines: &HashMap<String, Machine>) {
     for (_, machine) in machines.iter() {
         for language in &machine.languages {
             add_item_to_list(&LANGUAGES, language.clone());
+        }
+    }
+}
+
+/**
+ * Create a list of categories and subcategories from the given HashMap of machines.
+ */
+pub fn create_categories_list(machines: &HashMap<String, Machine>) {
+    for (_, machine) in machines.iter() {
+        if let Some(category) = &machine.category {
+            add_item_to_list(&CATEGORIES, category.clone());
+            if let Some(subcategory) = &machine.subcategory {
+                let key = format!("{} - {}", category, subcategory);
+                add_item_to_list(&SUBCATEGORIES, key);
+            }
         }
     }
 }

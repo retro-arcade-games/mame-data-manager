@@ -496,7 +496,7 @@ fn create_relations(conn: &mut Connection) -> Result<()> {
     // Add categories
     conn.execute(
         "INSERT OR IGNORE INTO categories (name)
-         SELECT DISTINCT category FROM machines WHERE category IS NOT NULL",
+         SELECT DISTINCT category FROM machines WHERE category IS NOT NULL ORDER BY category",
         [],
     )?;
     // Update machines with category_id
@@ -510,7 +510,7 @@ fn create_relations(conn: &mut Connection) -> Result<()> {
         "INSERT OR IGNORE INTO subcategories (name, category_id)
          SELECT DISTINCT subcategory, category_id
          FROM machines
-         WHERE subcategory IS NOT NULL",
+         WHERE subcategory IS NOT NULL ORDER BY subcategory",
         [],
     )?;
     // Update machines with subcategory_id

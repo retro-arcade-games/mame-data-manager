@@ -134,7 +134,9 @@ fn extract_files() -> Result<(), Box<dyn Error>> {
             print_step_message(&message, count, DATA_TYPES.len(), ERROR);
         }
     }
+
     println!();
+
     Ok(())
 }
 
@@ -175,6 +177,7 @@ fn read_files() -> Result<(), Box<dyn Error>> {
             print_step_message(&message, count, DATA_TYPES.len(), ERROR);
         }
     }
+
     println!();
 
     // Recreate the lists after reading the files.
