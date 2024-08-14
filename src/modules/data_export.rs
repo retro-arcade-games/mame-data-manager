@@ -65,14 +65,14 @@ fn export_sqlite() -> Result<(), Box<dyn Error>> {
 fn export_json() -> Result<(), Box<dyn Error>> {
     show_section("Export to JSON");
 
-    let json_base_path = format!("{}/{}/{}", PATHS.export_path, "json", "machines.json");
+    let json_base_path = format!("{}/{}", PATHS.export_path, "json");
 
     let time = std::time::Instant::now();
 
-    let message = format!("Creating {} JSON file", style("machines.json").cyan());
+    let message = format!("Creating JSON files");
     println_step_message(&message, 1, 1, WRITE);
 
-    json_writer::write_machines(&json_base_path)?;
+    json_writer::export_to_json(&json_base_path)?;
 
     let rounded_secs = (time.elapsed().as_secs_f32() * 10.0).round() / 10.0;
     let message = format!("JSON file created in {}s", rounded_secs);
