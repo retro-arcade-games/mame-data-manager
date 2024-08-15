@@ -1,3 +1,7 @@
+<div align="center">
+    <img width="200" alt="mame data manager logo" src="./docs/assests/logo.png">
+</div>
+
 <h2 align="center">MAME Data Manager</h2>
 
 <p align="center">Download, read, manage and export MAME information</p>
@@ -19,11 +23,11 @@ MAME Data Manager is a tool designed to help manage and manipulate data related 
 
 ## Why
 
-Managing MAME information can be challenging because the data is scattered across various files, each with its own format and structure. This fragmentation makes it difficult for users to work with the data effectively. MAME Data Manager aims to solve this problem by providing a tool that automatically downloads the latest versions of these files and consolidates all the information into a single, unified database. This allows users to access and manipulate MAME data more easily and efficiently.
+Managing MAME information can be challenging as the data is scattered across various files, each with its own format and structure. This fragmentation makes it difficult for users to work with the data effectively. MAME Data Manager aims to solve this problem by providing a tool that automatically downloads the latest versions of these files and consolidates all the information into a single, unified database. This allows users to access and manipulate MAME data more easily and efficiently.
 
 ## Running the application
 
-MAME Data Manager is a Rust-based application that allows you to manage and manipulate MAME-related data. Below are the instructions for running the application by either downloading the binary or running it locally from the source code.
+MAME Data Manager is a Rust-based application. Below are the instructions for running the application by either downloading the binary or running it locally from the source code.
 
 ### Option 1: Download the Binary
 
@@ -75,9 +79,40 @@ MAME Data Manager is a Rust-based application that allows you to manage and mani
 
 Once the application is running, an interactive menu will appear in the terminal. Use the arrow keys to navigate through the menu and select the desired options.
 
-The menu options include:
+- **Input data**  
+  Options for managing and processing input data:
 
-TODO
+  - **Download files**: Downloads the necessary files from the internet. This step is crucial as the application relies on these files to generate the final outputs.
+  - **Extract files**: Extracts the contents of the downloaded files, preparing them for further processing. The files are compressed archives that need to be unpacked.
+  - **Read files**: Reads and processes the extracted files which will be stored in memory and used in subsequent steps.
+
+- **Filter data**  
+  Options for filtering the machines based on various criteria:
+
+  - **Remove machines with non-game categories**: Filters out machines that do not belong to game-related categories (e.g., Calculator, Handheld, or Watch).
+  - **Remove device machines**: Excludes machines classified as devices, which are non-playable components used by other machines.
+  - **Remove BIOS machines**: Filters out machines that are BIOS systems, which are often necessary but not directly playable.
+  - **Remove mechanical machines**: Excludes machines that are classified as mechanical, such as pinball or slot machines, that do not fit the target data set.
+  - **Remove modified machines**: Filters out machines that are flagged as modified or unofficial versions of original systems such as bootlegs, prototypes or PlayChoice-10.
+  - **Remove clones**: Excludes clone machines that are duplicates or slight variations of original systems.
+  - **Remove ALL non-game machines (apply all machine filters)**: Applies all the above filters to remove all non-game related machines in one step.
+
+- **View statistics**  
+  Options to view various statistics and insights based on the processed data:
+
+  - **General stats**: Displays an overview of the total number of machines, filtered machines, and other general statistics.
+  - **Top 10 categories**: Shows the top 10 categories with the highest number of machines.
+  - **Top 10 subcategories**: Displays the top 10 subcategories by machine count.
+  - **Top 10 manufacturers**: Lists the top 10 manufacturers based on the number of machines they produced.
+  - **Top 10 series**: Shows the top 10 game series with the most entries in the data set.
+  - **Top 10 languages**: Displays the top 10 languages used across the machines.
+  - **Top 10 players information**: Shows data on player configurations, such as single-player, multiplayer, and their frequency.
+
+- **Export data**  
+  Options to export the processed data in various formats:
+  - **Export to SQLite**: Exports the filtered data into a SQLite database for easy querying and analysis.
+  - **Export to JSON**: Saves the data in JSON format, which is ideal for use in web applications or other systems that consume structured data.
+  - **Export to CSV**: Outputs the data in CSV format, which is easily viewable and editable in spreadsheet applications like Excel or Google Sheets.
 
 Simply follow the on-screen instructions to perform the desired actions.
 
@@ -91,7 +126,7 @@ MAME Data Manager wouldn't be possible without the invaluable contributions and 
 
 - **The MAME Community**: A special thanks to the entire MAME community for their continuous efforts in preserving arcade history and making it accessible to everyone. Your work is the foundation upon which this project is built.
 
-- **AntoPISA and Progetto-SNAPS**: AntoPISA's [Progetto-SNAPS](https://www.progettosnaps.net) project has been an essential resource for MAME artwork and other assets. Thank you for your dedication and hard work in creating and maintaining this incredible resource.
+- **AntoPISA and Progetto-SNAPS**: @AntoPISA's [Progetto-SNAPS](https://www.progettosnaps.net) project has been an essential resource for MAME artwork and other assets. Thank you for your dedication and hard work in creating and maintaining this incredible resource.
 
 - **Motoschifo and Arcade Database (ADB)**: Motoschifo's [Arcade Database](http://adb.arcadeitalia.net) is a comprehensive resource for MAME data, providing detailed information about arcade games and machines.
 
