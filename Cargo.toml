@@ -1,7 +1,10 @@
 [package]
-name = "mame_data_manager"
-version = "0.1.0"
+name = "mame-data-manager"
+version = "0.5.0"
 edition = "2021"
+authors = ["Ruben Sosenke <rsosenke@gmail.com>"]
+description = "Tool for managing and processing MAME data, including parsing files, querying information, and exporting in various formats."
+license = "MIT"
 
 [dependencies]
 reqwest = { version = "0.11", features = ["blocking"] }
