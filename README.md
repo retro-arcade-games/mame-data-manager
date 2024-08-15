@@ -7,6 +7,11 @@
 <p align="center">Download, read, manage and export MAME information</p>
 
 <p align="center">
+    <img src="https://img.shields.io/github/v/release/retro-arcade-games/mame-data-manager" />
+    <img src="https://img.shields.io/github/license/retro-arcade-games/mame-data-manager" />
+</p>
+
+<p align="center">
   <a href="#about">About</a> •
   <a href="#why">Why</a> •
   <a href="#running-the-application">Running the Application</a> •
@@ -34,16 +39,11 @@ MAME Data Manager is a Rust-based application. Below are the instructions for ru
 1. **Download the Binary**:
 
    - Visit the [releases section](https://github.com/retro-arcade-games/mame-data-manager/releases) in this repository.
-   - Download the latest version of the binary for your operating system (Windows, macOS, Linux).
+   - Download the latest version of the binary. (Currently only for macOS).
 
 2. **Run the Application**:
    - Navigate to the folder where you downloaded the binary.
-   - On Windows:
-     - Double-click the downloaded file or run it from the command line:
-       ```sh
-       ./mame-data-manager.exe
-       ```
-   - On macOS/Linux:
+   - On macOS:
      - Ensure the file has execution permissions and then run it:
        ```sh
        chmod +x mame-data-manager
