@@ -6,6 +6,12 @@ use std::error::Error;
  */
 pub fn remove_non_game_categories() -> Result<u64, Box<dyn Error>> {
     let mut machines = MACHINES.lock().unwrap();
+
+    // If the machines were not loaded, return an error
+    if machines.is_empty() {
+        return Err("No machines data loaded, please read the data first.".into());
+    }
+
     // List of categories to ignore
     let ignored_categories = vec![
         "Board Game",

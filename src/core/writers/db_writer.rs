@@ -2,6 +2,7 @@ use crate::core::data::{get_list, LANGUAGES, MACHINES, MANUFACTURERS, PLAYERS, S
 use crate::core::models::Machine;
 use crate::helpers::ui_helper::init_progress_bar;
 use rusqlite::{params, Connection, Result, Transaction};
+use std::error::Error;
 use std::fs;
 
 /**
@@ -657,7 +658,12 @@ fn create_relations(conn: &mut Connection) -> Result<()> {
 /**
  * Write the given machines data to the database.
  */
-pub fn write_machines(db_path: &str) -> Result<()> {
+pub fn write_machines(db_path: &str) -> Result<(), Box<dyn Error>> {
+    // If the machines were not loaded, return an error
+    if MACHINES.lock().unwrap().is_empty() {
+        return Err("No machines data loaded, please read the data first.".into());
+    }
+
     if fs::metadata(db_path).is_ok() {
         let _ = fs::remove_file(db_path);
     }

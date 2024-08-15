@@ -1,6 +1,6 @@
 use crate::core::writers::{csv_writer, db_writer, json_writer};
 use crate::helpers::fs_helper::PATHS;
-use crate::helpers::ui_helper::{icons::*, print_step_message, println_step_message, show_section};
+use crate::helpers::ui_helper::{icons::*, print_message, println_message, show_section};
 use dialoguer::{console::style, theme::ColorfulTheme, Select};
 use std::error::Error;
 
@@ -46,13 +46,20 @@ fn export_sqlite() -> Result<(), Box<dyn Error>> {
     let time = std::time::Instant::now();
 
     let message = format!("Creating {} database", style("machines.db").cyan());
-    println_step_message(&message, 1, 1, WRITE);
+    println_message(&message, WRITE);
 
-    db_writer::write_machines(&data_base_path)?;
+    let result = db_writer::write_machines(&data_base_path);
+
+    if result.is_err() {
+        let message = format!("Error: {}", result.err().unwrap());
+        print_message(&message, ERROR);
+        println!();
+        return Ok(());
+    }
 
     let rounded_secs = (time.elapsed().as_secs_f32() * 10.0).round() / 10.0;
     let message = format!("Database created in {}s", rounded_secs);
-    print_step_message(&message, 1, 1, SUCCESS);
+    print_message(&message, SUCCESS);
 
     println!();
 
@@ -70,13 +77,20 @@ fn export_json() -> Result<(), Box<dyn Error>> {
     let time = std::time::Instant::now();
 
     let message = format!("Creating JSON files");
-    println_step_message(&message, 1, 1, WRITE);
+    println_message(&message, WRITE);
 
-    json_writer::export_to_json(&json_base_path)?;
+    let result = json_writer::export_to_json(&json_base_path);
+
+    if result.is_err() {
+        let message = format!("Error: {}", result.err().unwrap());
+        print_message(&message, ERROR);
+        println!();
+        return Ok(());
+    }
 
     let rounded_secs = (time.elapsed().as_secs_f32() * 10.0).round() / 10.0;
     let message = format!("JSON file created in {}s", rounded_secs);
-    print_step_message(&message, 1, 1, SUCCESS);
+    print_message(&message, SUCCESS);
 
     println!();
 
@@ -94,13 +108,20 @@ fn export_csv() -> Result<(), Box<dyn Error>> {
     let time = std::time::Instant::now();
 
     let message = format!("Creating CSV files");
-    println_step_message(&message, 1, 1, WRITE);
+    println_message(&message, WRITE);
 
-    csv_writer::export_to_csv(&csv_base_path)?;
+    let result = csv_writer::export_to_csv(&csv_base_path);
+
+    if result.is_err() {
+        let message = format!("Error: {}", result.err().unwrap());
+        print_message(&message, ERROR);
+        println!();
+        return Ok(());
+    }
 
     let rounded_secs = (time.elapsed().as_secs_f32() * 10.0).round() / 10.0;
     let message = format!("CSV file created in {}s", rounded_secs);
-    print_step_message(&message, 1, 1, SUCCESS);
+    print_message(&message, SUCCESS);
 
     println!();
 

@@ -2,6 +2,8 @@ use crate::core::data::{
     get_top, CATEGORIES, LANGUAGES, MANUFACTURERS, PLAYERS, SERIES, SUBCATEGORIES,
 };
 use crate::core::{data::MACHINES, models::Machine};
+use crate::helpers::ui_helper::icons::ERROR;
+use crate::helpers::ui_helper::{println_message, show_section};
 use dialoguer::{theme::ColorfulTheme, Select};
 use num_format::{Locale, ToFormattedString};
 use prettytable::{row, Cell, Row, Table};
@@ -72,7 +74,20 @@ pub fn show_stats_submenu() -> Result<(), Box<dyn Error>> {
  * Show the statistics.
  */
 fn show_stats() -> Result<(), Box<dyn Error>> {
+    show_section("General stats");
+
     let machines = MACHINES.lock().unwrap();
+
+    if machines.is_empty() {
+        let message = format!(
+            "Error: {}",
+            "No machines data loaded, please read the data first."
+        );
+        println_message(&message, ERROR);
+        println!();
+        return Ok(());
+    }
+
     let machines = machines.values().collect::<Vec<&Machine>>();
 
     let total_machines = machines.len();
@@ -118,11 +133,28 @@ fn show_stats() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
+/**
+ * Show the top by collection.
+ */
 fn show_top_by_collection(
     title: String,
     column: String,
     map: &Arc<Mutex<HashMap<String, usize>>>,
 ) -> Result<(), Box<dyn Error>> {
+    show_section(&title);
+
+    let machines = MACHINES.lock().unwrap();
+
+    if machines.is_empty() {
+        let message = format!(
+            "Error: {}",
+            "No machines data loaded, please read the data first."
+        );
+        println_message(&message, ERROR);
+        println!();
+        return Ok(());
+    }
+
     let top = get_top(map, 10);
 
     let mut table = Table::new();

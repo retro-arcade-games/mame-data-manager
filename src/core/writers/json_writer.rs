@@ -11,7 +11,12 @@ use std::{collections::HashMap, error::Error, fs::File, io::Write, sync::MutexGu
 /**
  * Export the machines data to a JSON file
  */
-pub fn export_to_json(export_path: &str) -> Result<(), Box<dyn std::error::Error>> {
+pub fn export_to_json(export_path: &str) -> Result<(), Box<dyn Error>> {
+    // If the machines were not loaded, return an error
+    if MACHINES.lock().unwrap().is_empty() {
+        return Err("No machines data loaded, please read the data first.".into());
+    }
+
     export_machines_to_json(export_path)?;
 
     // Export additional collections to separate JSON files

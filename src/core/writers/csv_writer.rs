@@ -8,9 +8,15 @@ use std::{collections::HashMap, error::Error, fs::File, sync::MutexGuard};
 /**
  * Export the machines data to a CSV file
  */
-pub fn export_to_csv(export_path: &str) -> Result<(), Box<dyn std::error::Error>> {
+pub fn export_to_csv(export_path: &str) -> Result<(), Box<dyn Error>> {
     // Get the machines data
     let machines = MACHINES.lock().unwrap();
+
+    // If the machines were not loaded, return an error
+    if machines.is_empty() {
+        return Err("No machines data loaded, please read the data first.".into());
+    }
+
     let mut machines_vec: Vec<(&String, &Machine)> = machines.iter().collect();
     machines_vec.sort_by_key(|&(name, _)| name);
 

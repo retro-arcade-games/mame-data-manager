@@ -18,6 +18,12 @@ pub enum MachineFilter {
  */
 pub fn remove_machines_by_filter(machine_filter: MachineFilter) -> Result<u64, Box<dyn Error>> {
     let mut machines = MACHINES.lock().unwrap();
+
+    // If the machines were not loaded, return an error
+    if machines.is_empty() {
+        return Err("No machines data loaded, please read the data first.".into());
+    }
+
     let mut removed_machine_count: u64 = 0;
     let mut machines_to_remove: Vec<String> = Vec::new();
 

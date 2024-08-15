@@ -45,6 +45,21 @@ pub fn println_step_message(message: &str, step: usize, total_steps: usize, icon
 }
 
 /**
+ * Print a message with an icon.
+ */
+pub fn println_message(message: &str, icon: Emoji) {
+    println!("{} {}", icon, message,);
+}
+
+/**
+ * Print a message with an icon on the same line.
+ */
+pub fn print_message(message: &str, icon: Emoji) {
+    clean_last_line().unwrap_or_default();
+    println_message(message, icon)
+}
+
+/**
  * Initialize a progress bar.
  */
 pub fn init_progress_bar(total: u64, message: &str) -> indicatif::ProgressBar {
