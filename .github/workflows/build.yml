@@ -1,20 +1,45 @@
-name: Build
+name: SonarCloud Analysis
+
 on:
   push:
     branches:
       - main
   pull_request:
-    types: [opened, synchronize, reopened]
+    branches:
+      - main
+
 jobs:
-  sonarcloud:
-    name: SonarCloud
+  build:
+    name: Build and Analyze
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Rust
+        uses: actions/setup-rust@v1
         with:
-          fetch-depth: 0 # Shallow clones should be disabled for a better relevancy of analysis
+          rust-version: 1.80.1
+
+      - name: Install Clippy
+        run: rustup component add clippy
+
+      - name: Run Clippy
+        run: cargo clippy --all-targets --all-features -- -D warnings
+
+      - name: Run Rustfmt
+        run: cargo fmt -- --check
+
+      - name: Cache SonarCloud
+        uses: actions/cache@v3
+        with:
+          path: ~/.sonar/cache
+          key: ${{ runner.os }}-sonarcloud-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-sonarcloud-
+
       - name: SonarCloud Scan
-        uses: SonarSource/sonarcloud-github-action@master
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Needed to get PR information, if any
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        uses: SonarSource/sonarcloud-github-action@v1
+        with:
+          sonar-token: ${{ secrets.SONAR_TOKEN }}
