@@ -126,7 +126,7 @@ MAME Data Manager wouldn't be possible without the invaluable contributions and 
 
 - **The MAME Community**: A special thanks to the entire MAME community for their continuous efforts in preserving arcade history and making it accessible to everyone. Your work is the foundation upon which this project is built.
 
-- **AntoPISA and Progetto-SNAPS**: @AntoPISA's [Progetto-SNAPS](https://www.progettosnaps.net) project has been an essential resource for MAME artwork and other assets. Thank you for your dedication and hard work in creating and maintaining this incredible resource.
+- **AntoPISA and Progetto-SNAPS**: [AntoPISA](https://github.com/AntoPISA)'s [Progetto-SNAPS](https://www.progettosnaps.net) project has been an essential resource for MAME artwork and other assets. Thank you for your dedication and hard work in creating and maintaining this incredible resource.
 
 - **Motoschifo and Arcade Database (ADB)**: Motoschifo's [Arcade Database](http://adb.arcadeitalia.net) is a comprehensive resource for MAME data, providing detailed information about arcade games and machines.
 
@@ -134,7 +134,7 @@ MAME Data Manager wouldn't be possible without the invaluable contributions and 
 
 - **NPlayers Team**: The [NPlayers](https://nplayers.arcadebelgium.be) project by Arcade Belgium is a fantastic resource for information on multiplayer arcade games.
 
-- **@zombiesbyte and XMLTractor**: Special thanks to zombiesbyte for [XMLTractor](https://github.com/zombiesbyte/xmltractor) project.
+- **[zombiesbyte](https://github.com/zombiesbyte) and XMLTractor**: Special thanks to zombiesbyte for [XMLTractor](https://github.com/zombiesbyte/xmltractor) project.
 
 ## Contribute
 
