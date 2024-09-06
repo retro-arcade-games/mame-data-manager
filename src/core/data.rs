@@ -1,5 +1,5 @@
-use crate::core::models::Machine;
 use lazy_static::lazy_static;
+use mame_parser::models::Machine;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
@@ -86,7 +86,7 @@ pub fn recreate_lists() {
 /**
  * Create a list of series from the given HashMap of machines.
  */
-fn create_series_list(machines: &mut HashMap<String, crate::core::models::Machine>) {
+fn create_series_list(machines: &mut HashMap<String, Machine>) {
     for (_, machine) in machines.iter() {
         if let Some(series_name) = &machine.series {
             add_item_to_list(&SERIES, series_name.clone())

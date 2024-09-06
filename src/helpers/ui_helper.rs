@@ -4,14 +4,8 @@ use std::io;
 
 pub mod icons {
     use console::Emoji;
-
-    pub static DOWNLOAD: Emoji<'_, '_> = Emoji("🌐 ", "");
-    pub static INFO: Emoji<'_, '_> = Emoji("ℹ️  ", "");
     pub static ERROR: Emoji<'_, '_> = Emoji("🚨 ", "");
     pub static SUCCESS: Emoji<'_, '_> = Emoji("✅ ", "");
-    pub static LOUPE: Emoji<'_, '_> = Emoji("🔍 ", "");
-    pub static FOLDER: Emoji<'_, '_> = Emoji("🗂 ", "");
-    pub static READ: Emoji<'_, '_> = Emoji("🧾 ", "");
     pub static WRITE: Emoji<'_, '_> = Emoji("📝 ", "");
 }
 
@@ -24,24 +18,6 @@ lazy_static! {
  */
 pub fn clear_console() {
     TERM.clear_screen().unwrap();
-}
-
-/**
- * Print a message with the current step and total steps.
- */
-pub fn print_step_message(message: &str, step: usize, total_steps: usize, icon: Emoji) {
-    clean_last_line().unwrap_or_default();
-
-    println_step_message(message, step, total_steps, icon)
-}
-
-/**
- * Print a message with the current step and total steps.
- */
-pub fn println_step_message(message: &str, step: usize, total_steps: usize, icon: Emoji) {
-    let step = format!("[{}/{}]", step, total_steps);
-
-    println!("{} {} {}", style(step).bold().dim(), icon, message,);
 }
 
 /**

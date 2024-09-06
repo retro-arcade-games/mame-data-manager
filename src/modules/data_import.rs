@@ -1,14 +1,11 @@
-use crate::core::data::recreate_lists;
-use crate::core::data_types::DATA_TYPES;
+use crate::core::data::{recreate_lists, MACHINES};
 use crate::helpers::ui_helper::show_section;
-use crate::helpers::{
-    data_source_helper::get_data_source,
-    file_download_helper::download_file,
-    file_extractor_helper::extract_file,
-    fs_helper::{find_file_with_pattern, get_file_name, PATHS},
-    ui_helper::{icons::*, print_step_message, println_step_message},
-};
-use dialoguer::{console::style, theme::ColorfulTheme, Select};
+use dialoguer::{theme::ColorfulTheme, Select};
+use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
+use mame_parser::models::MameDataType;
+use mame_parser::progress::{CallbackType, ProgressInfo, SharedProgressCallback};
+use std::sync::Arc;
+use std::thread;
 use std::{error::Error, path::Path};
 
 /**
@@ -16,7 +13,7 @@ use std::{error::Error, path::Path};
  */
 pub fn show_import_submenu() -> Result<(), Box<dyn Error>> {
     loop {
-        let selections = &["Download files", "Extract files", "Read files", "< Back"];
+        let selections = &["Download files", "Unpack files", "Read files", "< Back"];
         let selection = Select::with_theme(&ColorfulTheme::default())
             .default(0)
             .items(&selections[..])
@@ -24,9 +21,9 @@ pub fn show_import_submenu() -> Result<(), Box<dyn Error>> {
             .unwrap();
 
         match selection {
-            0 => download_files()?,
-            1 => extract_files()?,
-            2 => read_files()?,
+            0 => download_all_files()?,
+            1 => unpack_all_files()?,
+            2 => read_all_files()?,
             3 => {
                 break;
             }
@@ -37,144 +34,218 @@ pub fn show_import_submenu() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-/**
- * Download the files from the data sources.
- */
-fn download_files() -> Result<(), Box<dyn Error>> {
+fn download_all_files() -> Result<(), Box<dyn Error>> {
     show_section("Download Files");
+    // Define the workspace path
+    let workspace_path = Path::new("data");
 
-    let mut count = 0;
+    // Create a multi progress bar
+    let multi_progress = MultiProgress::new();
 
-    for data_type in DATA_TYPES.iter() {
-        count += 1;
-        let message = format!("Getting URL for {}...", data_type.name);
-        println_step_message(&message, count, DATA_TYPES.len(), DOWNLOAD);
+    // Create progress bars for each data type
+    let progress_bars = Arc::new(
+         MameDataType::all_variants()
+             .iter()
+             .map(|&data_type| {
+                 let progress_bar = multi_progress.add(ProgressBar::new(100));
+                 progress_bar.set_style(
+                     ProgressStyle::default_bar()
+                         .template(&format!("{{spinner:.green}} [{{elapsed_precise}}] [{{bar:20.cyan/blue}}] {{bytes}}/{{total_bytes}} ({{eta}}) {{msg}}"))
+                         .progress_chars("#>-"),
+                 );
+                 (data_type, progress_bar)
+             })
+             .collect::<Vec<_>>(),
+     );
 
-        if let Ok(source_url) = get_data_source(data_type.source, data_type.source_match) {
-            let file_name = get_file_name(&source_url);
-            let file_path = format!("{}{}", PATHS.download_path, file_name);
-
-            if !Path::new(&file_path).exists() {
-                let message = format!(
-                    "Downloading {} from {}",
-                    style(file_name.clone()).cyan(),
-                    data_type.source
-                );
-                print_step_message(&message, count, DATA_TYPES.len(), DOWNLOAD);
-
-                download_file(&source_url, &file_path)?;
-
-                let message = format!("{} downloaded successfully", style(file_name).cyan());
-                print_step_message(&message, count, DATA_TYPES.len(), SUCCESS);
-            } else {
-                let message = format!("{} already exists (skipped)", style(file_name).cyan());
-                print_step_message(&message, count, DATA_TYPES.len(), INFO);
+    let shared_progress_callback: SharedProgressCallback = Arc::new(
+        move |data_type: MameDataType, progress_info: ProgressInfo| {
+            if let Some((_, progress_bar)) = progress_bars.iter().find(|(dt, _)| *dt == data_type) {
+                // Update the progress bar
+                match progress_info.callback_type {
+                    CallbackType::Progress => {
+                        progress_bar.set_length(progress_info.total);
+                        progress_bar.set_position(progress_info.progress);
+                    }
+                    CallbackType::Info => {
+                        progress_bar.set_message(progress_info.message);
+                    }
+                    CallbackType::Finish => {
+                        progress_bar.set_length(progress_info.total);
+                        progress_bar.set_position(progress_info.progress);
+                        progress_bar.finish_with_message(progress_info.message);
+                    }
+                    CallbackType::Error => {
+                        progress_bar.finish_with_message(progress_info.message);
+                    }
+                }
             }
-        } else {
-            let message = format!("Failed getting matching source for {}", data_type.name);
-            print_step_message(&message, count, DATA_TYPES.len(), ERROR);
+        },
+    );
+
+    // Download the files
+    let handles =
+        mame_parser::file_handling::download_files(workspace_path, shared_progress_callback);
+
+    // Wait for all threads to finish
+    multi_progress.join().unwrap();
+
+    // Print the result
+    for handle in handles {
+        match handle.join().unwrap() {
+            Ok(_) => {
+                // println!("Downloaded file: {}", path.display());
+            }
+            Err(e) => {
+                eprintln!("Error during download: {}", e);
+            }
         }
     }
-
     println!();
-
     Ok(())
 }
 
-/**
- * Extract the downloaded files.
- */
-fn extract_files() -> Result<(), Box<dyn Error>> {
+fn unpack_all_files() -> Result<(), Box<dyn Error>> {
     show_section("Extract Files");
 
-    let mut count = 0;
+    // Define the workspace path
+    let workspace_path = Path::new("data");
 
-    for data_type in DATA_TYPES.iter() {
-        count += 1;
+    // Create a multi progress bar
+    let multi_progress = MultiProgress::new();
 
-        let extracted_folder = format!("{}{}", PATHS.extract_path, data_type.name.to_lowercase());
+    // Create progress bars for each data type
+    let progress_bars = Arc::new(
+          MameDataType::all_variants()
+              .iter()
+              .map(|&data_type| {
+                  let progress_bar = multi_progress.add(ProgressBar::new(100));
+                  progress_bar.set_style(
+                      ProgressStyle::default_bar()
+                          .template(&format!("{{spinner:.green}} [{{elapsed_precise}}] [{{bar:20.cyan/blue}}] {{pos}}/{{len}} ({{eta}}) {{msg}}"))
+                          .progress_chars("#>-"),
+                  );
+                  (data_type, progress_bar)
+              })
+              .collect::<Vec<_>>(),
+      );
 
-        let message = format!("Checking if {} file already extracted...", data_type.name);
-        println_step_message(&message, count, DATA_TYPES.len(), LOUPE);
+    let shared_progress_callback: SharedProgressCallback = Arc::new(
+        move |data_type: MameDataType, progress_info: ProgressInfo| {
+            if let Some((_, progress_bar)) = progress_bars.iter().find(|(dt, _)| *dt == data_type) {
+                // Update the progress bar
+                match progress_info.callback_type {
+                    CallbackType::Progress => {
+                        progress_bar.set_length(progress_info.total);
+                        progress_bar.set_position(progress_info.progress);
+                    }
+                    CallbackType::Info => {
+                        progress_bar.set_message(progress_info.message);
+                    }
+                    CallbackType::Finish => {
+                        progress_bar.set_length(progress_info.total);
+                        progress_bar.set_position(progress_info.progress);
+                        progress_bar.finish_with_message(progress_info.message);
+                    }
+                    CallbackType::Error => {
+                        progress_bar.finish_with_message(progress_info.message);
+                    }
+                }
+            }
+        },
+    );
 
-        // Check if the file already exists in the extracted folder
-        if let Some(existing_file_path) =
-            find_file_with_pattern(&extracted_folder, &data_type.data_file_pattern)
-        {
-            let data_file = existing_file_path.split('/').last().unwrap();
+    // Unpack the files
+    let handles =
+        mame_parser::file_handling::unpack_files(workspace_path, shared_progress_callback);
 
-            let message = format!("{} already exists (skipped)", style(data_file).cyan());
-            print_step_message(&message, count, DATA_TYPES.len(), INFO);
+    // Wait for all threads to finish
+    multi_progress.join().unwrap();
 
-            continue;
-        }
-
-        // Check if the zip file is present
-        if let Some(zip_file_path) =
-            find_file_with_pattern(&PATHS.download_path, &data_type.zip_file_pattern)
-        {
-            let zip_file = zip_file_path.split('/').last().unwrap();
-
-            let message = format!(
-                "Extracting {} to {}",
-                style(zip_file).cyan(),
-                extracted_folder
-            );
-            print_step_message(&message, count, DATA_TYPES.len(), FOLDER);
-
-            extract_file(&zip_file_path, &extracted_folder)?;
-
-            let message = format!("{} extracted successfully", style(zip_file).cyan());
-            print_step_message(&message, count, DATA_TYPES.len(), SUCCESS);
-        } else {
-            let message = format!(
-                "File for {} not found, please download first",
-                data_type.name
-            );
-            print_step_message(&message, count, DATA_TYPES.len(), ERROR);
+    // Print the result
+    for handle in handles {
+        match handle.join().unwrap() {
+            Ok(_) => {
+                //println!("Unpacked data file: {}", path.display());
+            }
+            Err(e) => {
+                eprintln!("Error during unpacking: {}", e);
+            }
         }
     }
 
     println!();
-
     Ok(())
 }
 
-/**
- * Read the extracted files.
- */
-fn read_files() -> Result<(), Box<dyn Error>> {
+fn read_all_files() -> Result<(), Box<dyn Error>> {
     show_section("Read Files");
 
-    let mut count = 0;
+    // Define the workspace path
+    let workspace_path = Path::new("data");
 
-    for data_type in DATA_TYPES.iter() {
-        count += 1;
+    // Create a multi progress bar
+    let multi_progress: Arc<MultiProgress> = Arc::new(MultiProgress::new());
 
-        let extracted_folder = format!("{}{}", PATHS.extract_path, data_type.name.to_lowercase());
+    // Create progress bars for each data type
+    let progress_bars = Arc::new(
+          MameDataType::all_variants()
+              .iter()
+              .map(|&data_type| {
+                  let progress_bar = multi_progress.add(ProgressBar::new(100));
+                  progress_bar.set_style(
+                      ProgressStyle::default_bar()
+                          .template(&format!("{{spinner:.green}} [{{elapsed_precise}}] [{{bar:20.cyan/blue}}] {{pos}}/{{len}} ({{eta}}) {{msg}}"))
+                          .progress_chars("#>-"),
+                  );
+                  (data_type, progress_bar)
+              })
+              .collect::<Vec<_>>(),
+      );
 
-        let message = format!("Checking if {} file exists...", data_type.name);
-        println_step_message(&message, count, DATA_TYPES.len(), LOUPE);
-
-        if let Some(data_file_path) =
-            find_file_with_pattern(&extracted_folder, &data_type.data_file_pattern)
-        {
-            {
-                let time = std::time::Instant::now();
-                let data_file = data_file_path.split('/').last().unwrap();
-
-                let message = format!("Reading {}...", style(data_file).cyan());
-                print_step_message(&message, count, DATA_TYPES.len(), READ);
-
-                let _ = (data_type.read_function)(&data_file_path);
-
-                let rounded_secs = (time.elapsed().as_secs_f32() * 10.0).round() / 10.0;
-                let message = format!("{} loaded in {}s", style(data_file).cyan(), rounded_secs);
-                print_step_message(&message, count, DATA_TYPES.len(), SUCCESS);
+    // Create a shared progress callback
+    let shared_progress_callback: SharedProgressCallback = Arc::new(
+        move |data_type: MameDataType, progress_info: ProgressInfo| {
+            if let Some((_, progress_bar)) = progress_bars.iter().find(|(dt, _)| *dt == data_type) {
+                // Update the progress bar
+                match progress_info.callback_type {
+                    CallbackType::Progress => {
+                        progress_bar.set_length(progress_info.total);
+                        progress_bar.set_position(progress_info.progress);
+                    }
+                    CallbackType::Info => {
+                        progress_bar.set_message(progress_info.message);
+                    }
+                    CallbackType::Finish => {
+                        progress_bar.set_length(progress_info.total);
+                        progress_bar.set_position(progress_info.progress);
+                        progress_bar.finish_with_message(progress_info.message);
+                    }
+                    CallbackType::Error => {
+                        progress_bar.finish_with_message(progress_info.message);
+                    }
+                }
             }
-        } else {
-            let message = format!("File for {} not found", data_type.name);
-            print_step_message(&message, count, DATA_TYPES.len(), ERROR);
+        },
+    );
+
+    let handle = thread::spawn(move || {
+        multi_progress.join().unwrap();
+    });
+
+    // Read the files
+    let machines = mame_parser::file_handling::read_files(workspace_path, shared_progress_callback);
+
+    handle.join().unwrap();
+
+    // Print the result
+    match machines {
+        Ok(machines) => {
+            let mut machines_guard = MACHINES.lock().unwrap();
+            *machines_guard = machines;
+        }
+        Err(e) => {
+            eprintln!("Error reading data files: {}", e);
         }
     }
 

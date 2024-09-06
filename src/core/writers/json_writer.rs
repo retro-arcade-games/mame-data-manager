@@ -1,10 +1,8 @@
 use crate::{
-    core::{
-        data::{CATEGORIES, LANGUAGES, MACHINES, MANUFACTURERS, PLAYERS, SERIES, SUBCATEGORIES},
-        models::Machine,
-    },
+    core::data::{CATEGORIES, LANGUAGES, MACHINES, MANUFACTURERS, PLAYERS, SERIES, SUBCATEGORIES},
     helpers::ui_helper::init_progress_bar,
 };
+use mame_parser::models::Machine;
 use serde_json::json;
 use std::{collections::HashMap, error::Error, fs::File, io::Write, sync::MutexGuard};
 

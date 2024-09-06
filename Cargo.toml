@@ -25,3 +25,4 @@ prettytable-rs = "^0.10"
 num-format = "0.4.4"
 rusqlite = { version = "0.26", features = ["serde_json"] }
 csv = "1.1"
+mame-parser = "0.6.0"

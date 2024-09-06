@@ -1,6 +1,6 @@
 use crate::core::data::{get_list, LANGUAGES, MACHINES, MANUFACTURERS, PLAYERS, SERIES};
-use crate::core::models::Machine;
 use crate::helpers::ui_helper::init_progress_bar;
+use mame_parser::models::Machine;
 use rusqlite::{params, Connection, Result, Transaction};
 use std::error::Error;
 use std::fs;

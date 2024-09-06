@@ -1,8 +1,8 @@
-use crate::core::{
-    data::{CATEGORIES, LANGUAGES, MACHINES, MANUFACTURERS, PLAYERS, SERIES, SUBCATEGORIES},
-    models::Machine,
+use crate::core::data::{
+    CATEGORIES, LANGUAGES, MACHINES, MANUFACTURERS, PLAYERS, SERIES, SUBCATEGORIES,
 };
 use csv::Writer;
+use mame_parser::models::Machine;
 use std::{collections::HashMap, error::Error, fs::File, sync::MutexGuard};
 
 /**

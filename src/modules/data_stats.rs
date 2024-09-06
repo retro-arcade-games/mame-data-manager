@@ -1,10 +1,10 @@
 use crate::core::data::{
-    get_top, CATEGORIES, LANGUAGES, MANUFACTURERS, PLAYERS, SERIES, SUBCATEGORIES,
+    get_top, CATEGORIES, LANGUAGES, MACHINES, MANUFACTURERS, PLAYERS, SERIES, SUBCATEGORIES,
 };
-use crate::core::{data::MACHINES, models::Machine};
 use crate::helpers::ui_helper::icons::ERROR;
 use crate::helpers::ui_helper::{println_message, show_section};
 use dialoguer::{theme::ColorfulTheme, Select};
+use mame_parser::models::Machine;
 use num_format::{Locale, ToFormattedString};
 use prettytable::{row, Cell, Row, Table};
 use std::collections::HashMap;
