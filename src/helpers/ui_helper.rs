@@ -54,15 +54,17 @@ pub fn init_progress_bar(total: u64, message: &str) -> indicatif::ProgressBar {
  */
 pub fn show_splash_screen() {
     clear_console();
-    println!(" █    ███         ███    █");
-    println!("███    ███       ███    ███");
-    println!("███  █████████████████  ███");
-    println!("████████ █████████ ████████");
-    println!("███████████████████████████");
-    println!("███████████████████████████");
-    println!("  ███████████████████████  ");
-    println!("     ███           ███     ");
-    println!("   ████             ████   ");
+    println!("           █████████           ");
+    println!("          ░█   █████▓          ");
+    println!("        ██     ████████        ");
+    println!("        ███████████████        ");
+    println!("           █████████           ");
+    println!("             █████             ");
+    println!("     █████  ▒█████░▒▓▓███      ");
+    println!(" ████        █████        ███▒ ");
+    println!("██        ████████████       ██");
+    println!("█████                     █████");
+    println!("     ██████████████████████░   ");
 }
 
 /**
@@ -71,9 +73,9 @@ pub fn show_splash_screen() {
 pub fn show_title() {
     TERM.set_title("Mame Data Manager");
     println!();
-    println!("===========================");
-    println!("/    Mame Data Manager    /");
-    println!("===========================");
+    println!("===============================");
+    println!("/      Mame Data Manager      /");
+    println!("===============================");
     println!();
 }
 
