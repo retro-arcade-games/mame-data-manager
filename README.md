@@ -1,7 +1,3 @@
-<div align="center">
-    <img width="200" alt="mame data manager logo" src="./docs/assests/logo.png">
-</div>
-
 <h2 align="center">MAME Data Manager</h2>
 
 <p align="center">Download, read, manage and export MAME information</p>
