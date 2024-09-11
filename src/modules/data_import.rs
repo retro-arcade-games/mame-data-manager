@@ -1,5 +1,5 @@
-use crate::core::data::{recreate_lists, MACHINES};
 use crate::helpers::ui_helper::show_section;
+use crate::MACHINES;
 use dialoguer::{theme::ColorfulTheme, Select};
 use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
 use mame_parser::models::MameDataType;
@@ -250,9 +250,6 @@ fn read_all_files() -> Result<(), Box<dyn Error>> {
     }
 
     println!();
-
-    // Recreate the lists after reading the files.
-    recreate_lists();
 
     Ok(())
 }

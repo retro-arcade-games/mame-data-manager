@@ -1,28 +1,16 @@
 [package]
 name = "mame-data-manager"
-version = "0.5.0"
+version = "0.7.1"
 edition = "2021"
 authors = ["Ruben Sosenke <rsosenke@gmail.com>"]
 description = "Tool for managing and processing MAME data, including parsing files, querying information, and exporting in various formats."
 license = "MIT"
 
 [dependencies]
-reqwest = { version = "0.11", features = ["blocking"] }
 indicatif = "0.16"
 dialoguer = "0.9"
-scraper = "0.13"
-url = "2.2"
 lazy_static = "1.4"
-zip = "0.5.13"
-sevenz-rust = "0.6.1"
-regex = "1.5.4"
-walkdir = "2.3.2"
-serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
-quick-xml = "0.23"
 console = "0.14.1"
 prettytable-rs = "^0.10"
 num-format = "0.4.4"
-rusqlite = { version = "0.26", features = ["serde_json"] }
-csv = "1.1"
-mame-parser = "0.6.0"
+mame-parser = "0.7.1"

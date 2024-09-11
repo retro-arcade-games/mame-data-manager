@@ -1,5 +1,5 @@
-use crate::core::data::{recreate_lists, MACHINES};
 use crate::helpers::ui_helper::{icons::*, print_message, println_message, show_section};
+use crate::MACHINES;
 use dialoguer::{theme::ColorfulTheme, Select};
 use mame_parser::file_handling::{remove_machines_by_category, remove_machines_by_filter};
 use mame_parser::models::{Category, MachineFilter};
@@ -110,9 +110,6 @@ fn remove_non_game_categories() -> Result<(), Box<dyn Error>> {
         println!();
     }
 
-    // Recreate the lists after removing the machines.
-    recreate_lists();
-
     Ok(())
 }
 
@@ -155,9 +152,6 @@ fn remove_non_games(remove_filter: MachineFilter) -> Result<(), Box<dyn Error>> 
         print_message(&message, SUCCESS);
         println!();
     }
-
-    // Recreate the lists after removing the machines.
-    recreate_lists();
 
     Ok(())
 }

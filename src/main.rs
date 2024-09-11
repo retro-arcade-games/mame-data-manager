@@ -1,21 +1,25 @@
-mod core;
 mod helpers;
 mod modules;
 use dialoguer::{theme::ColorfulTheme, Select};
-use helpers::fs_helper::check_folder_structure;
 use helpers::ui_helper::{show_splash_screen, show_title};
+use lazy_static::lazy_static;
+use mame_parser::models::Machine;
 use modules::{data_export, data_filtering, data_import, data_stats};
+use std::collections::HashMap;
 use std::error::Error;
+use std::sync::{Arc, Mutex};
+
+lazy_static! {
+    pub static ref MACHINES: Arc<Mutex<HashMap<String, Machine>>> =
+        Arc::new(Mutex::new(HashMap::new()));
+}
 
 fn main() -> Result<(), Box<dyn Error>> {
-    check_folder_structure()?;
     show_main_menu()?;
     Ok(())
 }
 
-/**
- * Show the main menu.
- */
+/// Show the main menu.
 fn show_main_menu() -> Result<(), Box<dyn Error>> {
     show_splash_screen();
     show_title();

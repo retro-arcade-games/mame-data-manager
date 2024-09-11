@@ -36,20 +36,6 @@ pub fn print_message(message: &str, icon: Emoji) {
 }
 
 /**
- * Initialize a progress bar.
- */
-pub fn init_progress_bar(total: u64, message: &str) -> indicatif::ProgressBar {
-    let pb = indicatif::ProgressBar::new(total);
-    pb.set_style(
-        indicatif::ProgressStyle::default_bar()
-        .template("{spinner:.green} [{elapsed_precise}] [{bar:40.cyan/blue}] {pos}/{len} {msg} ({eta})")
-            .progress_chars("#>-"),
-    );
-    pb.set_message(message.to_string());
-    pb
-}
-
-/**
  * Show the splash screen.
  */
 pub fn show_splash_screen() {
