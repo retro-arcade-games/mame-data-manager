@@ -3,6 +3,12 @@
 Changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
+## [v0.7.2] - 2024-09-27
+
+### Changed
+
+- Upgrade of mame-parser crate to v 0.7.2
+
 ## [v0.7.1] - 2024-09-11
 
 ### Added

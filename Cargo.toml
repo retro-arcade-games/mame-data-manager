@@ -1,6 +1,6 @@
 [package]
 name = "mame-data-manager"
-version = "0.7.1"
+version = "0.7.2"
 edition = "2021"
 authors = ["Ruben Sosenke <rsosenke@gmail.com>"]
 description = "Tool for managing and processing MAME data, including parsing files, querying information, and exporting in various formats."
@@ -13,4 +13,4 @@ lazy_static = "1.4"
 console = "0.14.1"
 prettytable-rs = "^0.10"
 num-format = "0.4.4"
-mame-parser = "0.7.1"
+mame-parser = "0.7.2"
